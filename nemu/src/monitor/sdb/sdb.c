@@ -18,7 +18,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
-
+#include <memory/paddr.h>
+#include <memory/vaddr.h>
 static int is_batch_mode = false;
 
 void init_regex();
@@ -49,9 +50,47 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_END;
   return -1;
-}
 
+
+}
+static int cmd_info(){
+  char *arg = strtok(NULL, " ");
+  if(strcmp(arg,"r")==0){
+    isa_reg_display();
+  }else{
+    
+    printf("wating for watchpoint\n");
+  }
+
+  return 0;
+}
+static int cmd_si(){
+  char *arg = strtok(NULL, " ");
+  if(arg==NULL){
+    cpu_exec(1);
+  }
+  else{
+    int n;
+    sscanf(arg,"%d",&n);
+    cpu_exec(n);
+  }
+  return 0;
+}
+static int cmd_x(){
+  char *arg = strtok(NULL, " ");
+  int n;
+  sscanf(arg,"%d",&n);
+  arg = strtok(NULL, " ");
+  word_t addr;
+  sscanf(arg,"%x",&addr);
+  for(int i=0;i<n;i++){
+    printf("%x\n",vaddr_read(addr,4));
+    addr+=4;
+  }
+  return 0;
+}
 static int cmd_help(char *args);
 
 static struct {
@@ -62,10 +101,13 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  {"info","Print register state",cmd_info},
+  {"si","Single step",cmd_si},
+  {"x","Scan memory",cmd_x}
   /* TODO: Add more commands */
 
 };
+
 
 #define NR_CMD ARRLEN(cmd_table)
 
