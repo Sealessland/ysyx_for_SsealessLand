@@ -14,7 +14,7 @@ class RegFileBundle extends Bundle {
 class RegFile extends Module {
   val io = IO(new RegFileBundle)
   val regfile = Mem(32, UInt(32.W))       // 32个寄存器
-
+    regfile(0) := 0.U
   // 写入逻辑
   when(io.write_addr =/= 0.U) {
     regfile(io.write_addr) := io.write_data

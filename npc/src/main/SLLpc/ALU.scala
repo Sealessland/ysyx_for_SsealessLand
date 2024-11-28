@@ -25,6 +25,7 @@ class AluIO(width: Int) extends Bundle {
   val alu_op = Input(UInt(4.W))
   val out = Output(UInt(width.W))
   val sum = Output(UInt(width.W))
+     
 }
 
 class Alu(val width: Int) extends Module {
@@ -45,7 +46,8 @@ class Alu(val width: Int) extends Module {
       Alu.ALU_OR -> (io.A | io.B),
       Alu.ALU_XOR -> (io.A ^ io.B),
       Alu.ALU_COPY_A -> io.A,
-      Alu.ALU_COPY_B -> io.B
+      Alu.ALU_COPY_B -> io.B,
+
     )
   )
 
