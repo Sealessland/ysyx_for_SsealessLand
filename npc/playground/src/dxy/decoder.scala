@@ -168,7 +168,6 @@ class Decode extends Module {
   io.opcode := decodedBundle(Opcode)
 
   val imm_type = decodedBundle(ImmType)
-  // TODO: Use Mux1H after #2261 has been merged
   io.imm := MuxLookup(imm_type, 0.U)(
     Seq(
       ImmTypeEnum.immI      -> imm_i,
