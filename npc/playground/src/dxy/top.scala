@@ -5,41 +5,64 @@ import chisel3.util._
 
 class Top extends Module {
   val io = IO(new Bundle {
+    // Input instruction from external source (Verilator)
     val inst = Input(UInt(32.W))
+    // Output PC for instruction fetch
     val pc = Output(UInt(32.W))
+
+    // Memory interface for Verilator
+    val mem_wen = Output(Bool())
+    val mem_ren = Output(Bool())
+    val mem_addr = Output(UInt(32.W))
+    val mem_wdata = Output(UInt(32.W))
+    val mem_rdata = Input(UInt(32.W))
   })
 
-  // 实例化模块
-  val fetch = Module(new Fetch)
-  val executer = Module(new executer)
-  val mem = Module(new Mem)
+  // Program counter register
+  val pc_reg = RegInit(0.U(32.W))
 
-  // 连接 fetch 模块
-  fetch.io.pc := io.pc
-  fetch.io.mem_rdata := mem.io.mem_rdata
+  // Module instantiations
+  val decode = Module(new Decode())
+  val regfile = Module(new RegFile())
+  val execute = Module(new executer())
 
-  // 连接 executer 模块
-  executer.io.opcode := io.inst(6, 0)
-  executer.io.rs1_addr := io.inst(19, 15)
-  executer.io.rs2_addr := io.inst(24, 20)
-  executer.io.rd_addr := io.inst(11, 7)
-  executer.io.rs1_en := true.B
-  executer.io.rs2_en := true.B
-  executer.io.rd_en := true.B
-  executer.io.imm := io.inst(31, 20)
-  executer.io.pc := io.pc
-  executer.io.rs1_data := 0.U // 需要从寄存器文件读取
-  executer.io.rs2_data := 0.U // 需要从寄存器文件读取
-  executer.io.mem_rdata := mem.io.mem_rdata
+  // Connect decoder
+  decode.io.inst := io.inst
 
-  // 连接 mem 模块
-  mem.io.clock := clock
-  mem.io.reset := reset
-  mem.io.mem_wen := executer.io.mem_wen
-  mem.io.mem_ren := executer.io.mem_ren
-  mem.io.mem_addr := executer.io.mem_addr
-  mem.io.mem_wdata := executer.io.mem_wdata
+  // Connect register file
+  regfile.io.rs1_addr := decode.io.rs1_addr
+  regfile.io.rs2_addr := decode.io.rs2_addr
+  regfile.io.rd_addr := execute.io.rd_addr
+  regfile.io.rd_data := execute.io.rd_data
+  regfile.io.rd_en := execute.io.rd_wen
 
-  // 输出 PC
-  io.pc := executer.io.next_pc
+  // Connect execute module
+  execute.io.opcode := decode.io.opcode
+  execute.io.rs1_addr := decode.io.rs1_addr
+  execute.io.rs2_addr := decode.io.rs2_addr
+  execute.io.rd_addr := decode.io.rd_addr
+  execute.io.rs1_en := decode.io.rs1_en
+  execute.io.rs2_en := decode.io.rs2_en
+  execute.io.rd_en := decode.io.rd_en
+  execute.io.imm := decode.io.imm(31, 0) // Convert 64-bit to 32-bit
+  execute.io.pc := pc_reg
+  execute.io.rs1_data := regfile.io.rs1_data(31, 0) // Convert 64-bit to 32-bit
+  execute.io.rs2_data := regfile.io.rs2_data(31, 0) // Convert 64-bit to 32-bit
+  execute.io.mem_rdata := io.mem_rdata
+
+  // Connect memory interface
+  io.mem_wen := execute.io.mem_wen
+  io.mem_ren := execute.io.mem_ren
+  io.mem_addr := execute.io.mem_addr
+  io.mem_wdata := execute.io.mem_wdata
+
+  // Update PC based on branch results
+  when(execute.io.branch_taken) {
+    pc_reg := execute.io.next_pc
+  }.otherwise {
+    pc_reg := pc_reg + 4.U
+  }
+
+  // Output current PC
+  io.pc := pc_reg
 }

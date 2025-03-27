@@ -1,4 +1,4 @@
-import dxy.Decode
+import dxy.Top
 
 object Elaborate extends App {
   val firtoolOptions = Array(
@@ -11,6 +11,7 @@ object Elaborate extends App {
     ).reduce(_ + "," + _)
   )
   circt.stage.ChiselStage.emitSystemVerilogFile(new gcd.GCD(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new Decode(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new dxy.MemoryAccess(), args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new dxy.executer(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new Top(),args , firtoolOptions)
 }

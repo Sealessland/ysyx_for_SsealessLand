@@ -173,7 +173,7 @@ class executer extends Module {
     }
     is(35.U) { // jalr - 修正类型问题
       io.rd_data := io.pc + 4.U
-      io.next_pc := (io.rs1_data + io.imm) & (~1.U(32.W))
+      io.next_pc := (io.rs1_data + io.imm) &(~1.U(32.W)).asUInt
       io.branch_taken := true.B
     }
 

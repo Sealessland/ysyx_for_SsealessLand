@@ -5,7 +5,7 @@ import chisel3.util._
 
 class Fetch extends Module {
   val io = IO(new Bundle {
-    val pc = Input(UInt(32.W))
+    var pc = Input(UInt(32.W))
     val inst = Output(UInt(32.W))
     val mem_ren = Output(Bool())
     val mem_addr = Output(UInt(32.W))

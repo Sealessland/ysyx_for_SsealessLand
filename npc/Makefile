@@ -33,5 +33,8 @@ clean:
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by yourself."
-
+lator:
+	$(call git_commit, "gen lib") # DO NOT REMOVE THIS LINE!!
+# !
+	mkdir -p sim/verilator_model && verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal --top-module Top build/Top.sv --Mdir sim/verilator_model
 -include ../Makefile
