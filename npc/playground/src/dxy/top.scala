@@ -3,66 +3,56 @@ package dxy
 import chisel3._
 import chisel3.util._
 
-class Top extends Module {
+class CPU extends Module {
   val io = IO(new Bundle {
-    // Input instruction from external source (Verilator)
-    val inst = Input(UInt(32.W))
-    // Output PC for instruction fetch
-    val pc = Output(UInt(32.W))
-
-    // Memory interface for Verilator
-    val mem_wen = Output(Bool())
-    val mem_ren = Output(Bool())
-    val mem_addr = Output(UInt(32.W))
-    val mem_wdata = Output(UInt(32.W))
-    val mem_rdata = Input(UInt(32.W))
+    // 添加调试信号
+    val debug_pc = Output(UInt(32.W))
+    val debug_inst = Output(UInt(32.W))
+    val debug_mem_busy = Output(Bool())
   })
 
-  // Program counter register
-  val pc_reg = RegInit(0.U(32.W))
-
-  // Module instantiations
+  val fetchUnit = Module(new FetchUnit())
   val decode = Module(new Decode())
-  val regfile = Module(new RegFile())
-  val execute = Module(new executer())
+  val execute = Module(new execution())
+  val regFile = Module(new RegFile())
 
-  // Connect decoder
-  decode.io.inst := io.inst
+  // Program counter (PC)
+  val pc = RegInit(0.U(32.W))
+  val pc_stall = Wire(Bool())
 
-  // Connect register file
-  regfile.io.rs1_addr := decode.io.rs1_addr
-  regfile.io.rs2_addr := decode.io.rs2_addr
-  regfile.io.rd_addr := execute.io.rd_addr
-  regfile.io.rd_data := execute.io.rd_data
-  regfile.io.rd_en := execute.io.rd_wen
+  // 当内存访问忙时，暂停PC更新
+  pc_stall := execute.io.mem_busy
 
-  // Connect execute module
+  // 调试信号
+  io.debug_pc := pc
+  io.debug_inst := fetchUnit.io.inst
+  io.debug_mem_busy := execute.io.mem_busy
+
+  // Connect FetchUnit
+  fetchUnit.io.pc := pc
+
+  // Connect Decode
+  decode.io.inst := fetchUnit.io.inst
+
+  // Connect RegFile
+  regFile.io.rs1_addr := decode.io.rs1_addr
+  regFile.io.rs2_addr := decode.io.rs2_addr
+  regFile.io.rd_addr := decode.io.rd_addr
+  regFile.io.rd_en := decode.io.rd_en
+
+  // Connect Execute
+  execute.io.rs1_data := regFile.io.rs1_data
+  execute.io.rs2_data := regFile.io.rs2_data
   execute.io.opcode := decode.io.opcode
-  execute.io.rs1_addr := decode.io.rs1_addr
-  execute.io.rs2_addr := decode.io.rs2_addr
-  execute.io.rd_addr := decode.io.rd_addr
-  execute.io.rs1_en := decode.io.rs1_en
-  execute.io.rs2_en := decode.io.rs2_en
-  execute.io.rd_en := decode.io.rd_en
-  execute.io.imm := decode.io.imm(31, 0) // Convert 64-bit to 32-bit
-  execute.io.pc := pc_reg
-  execute.io.rs1_data := regfile.io.rs1_data(31, 0) // Convert 64-bit to 32-bit
-  execute.io.rs2_data := regfile.io.rs2_data(31, 0) // Convert 64-bit to 32-bit
-  execute.io.mem_rdata := io.mem_rdata
+  execute.io.imm := decode.io.imm
+  execute.io.rdEn  := decode.io.rd_en
+  execute.io.pc := pc
 
-  // Connect memory interface
-  io.mem_wen := execute.io.mem_wen
-  io.mem_ren := execute.io.mem_ren
-  io.mem_addr := execute.io.mem_addr
-  io.mem_wdata := execute.io.mem_wdata
+  // Write back to RegFile
+  regFile.io.rd_data := execute.io.rd_data
 
-  // Update PC based on branch results
-  when(execute.io.branch_taken) {
-    pc_reg := execute.io.next_pc
-  }.otherwise {
-    pc_reg := pc_reg + 4.U
+  // Update PC - 只有当不暂停时才更新PC
+  when(!pc_stall) {
+    pc := execute.io.next_pc
   }
-
-  // Output current PC
-  io.pc := pc_reg
 }

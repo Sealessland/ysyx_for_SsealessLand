@@ -1,4 +1,4 @@
-import dxy.Top
+import dxy._
 
 object Elaborate extends App {
   val firtoolOptions = Array(
@@ -10,8 +10,16 @@ object Elaborate extends App {
       "locationInfoStyle=wrapInAtSquareBracket"
     ).reduce(_ + "," + _)
   )
-  circt.stage.ChiselStage.emitSystemVerilogFile(new gcd.GCD(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new dxy.MemoryAccess(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new dxy.executer(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new Top(),args , firtoolOptions)
+
+  // 生成主要模块的Verilog代码
+  circt.stage.ChiselStage.emitSystemVerilogFile(new CPU(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new Decode(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new execution(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new RegFile(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new FetchUnit(), args, firtoolOptions)
+
+  // 生成内存访问和测试模块的Verilog代码
+  circt.stage.ChiselStage.emitSystemVerilogFile(new MemoryAccess(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new readDelay(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new test(), args, firtoolOptions)
 }

@@ -8,6 +8,7 @@ test:
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
+
 	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
 
 help:
@@ -36,5 +37,5 @@ sim:
 lator:
 	$(call git_commit, "gen lib") # DO NOT REMOVE THIS LINE!!
 # !
-	mkdir -p sim/verilator_model && verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal --top-module Top build/Top.sv --Mdir sim/verilator_model
+	mkdir -p Sim/verilator_model && verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal --top-module CPU build/CPU.sv --Mdir Sim/verilator_model
 -include ../Makefile

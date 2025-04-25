@@ -134,7 +134,7 @@ object RdEn extends BoolDecodeField[Insn] {
 }
 class Decode extends Module {
   val io = IO(new Bundle {
-    var inst = Input(UInt(32.W))
+    val inst = Input(UInt(32.W))
     val rs1_addr = Output(UInt(5.W))
     val rs1_en   = Output(Bool())
     val rs2_addr = Output(UInt(5.W))
