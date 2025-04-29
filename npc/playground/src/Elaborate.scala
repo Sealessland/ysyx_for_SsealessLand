@@ -12,14 +12,10 @@ object Elaborate extends App {
   )
 
   // 生成主要模块的Verilog代码
-  circt.stage.ChiselStage.emitSystemVerilogFile(new CPU(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new core(), args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new Decode(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new execution(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new Execution(), args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new RegFile(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new FetchUnit(), args, firtoolOptions)
 
   // 生成内存访问和测试模块的Verilog代码
-  circt.stage.ChiselStage.emitSystemVerilogFile(new MemoryAccess(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new readDelay(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new test(), args, firtoolOptions)
 }

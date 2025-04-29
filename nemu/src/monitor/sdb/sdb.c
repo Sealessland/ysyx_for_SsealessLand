@@ -55,18 +55,17 @@ static int cmd_q(char *args) {
 
 
 }
-static int cmd_info(){
+static int cmd_info(char *args){
   char *arg = strtok(NULL, " ");
   if(strcmp(arg,"r")==0){
     isa_reg_display();
   }else{
-    
     printf("wating for watchpoint\n");
   }
-
   return 0;
 }
-static int cmd_si(){
+
+static int cmd_si(char *args){
   char *arg = strtok(NULL, " ");
   if(arg==NULL){
     cpu_exec(1);
@@ -78,7 +77,8 @@ static int cmd_si(){
   }
   return 0;
 }
-static int cmd_x(){
+
+static int cmd_x(char *args){
   char *arg = strtok(NULL, " ");
   int n;
   sscanf(arg,"%d",&n);
@@ -91,6 +91,8 @@ static int cmd_x(){
   }
   return 0;
 }
+
+
 static int cmd_help(char *args);
 
 static struct {

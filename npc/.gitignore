@@ -11,7 +11,7 @@
 !.gitignore
 !.scalafmt.conf
 !README.md
-build/
+
 
 # mill
 !*.mill
@@ -21,3 +21,5 @@ out/
 .idea/
 .idea_modules/
 test_run_dir/
+ysyx-framework/
+chisel-env/

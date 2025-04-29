@@ -39,3 +39,7 @@ lator:
 # !
 	mkdir -p Sim/verilator_model && verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal --top-module CPU build/CPU.sv --Mdir Sim/verilator_model
 -include ../Makefile
+tor:
+	$(call git_commit, "gen lib") # DO NOT REMOVE THIS LINE!!
+	mkdir -p Sim/v_model && verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal --top-module core build/core.sv --Mdir Sim/v_model
+

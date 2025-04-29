@@ -115,6 +115,18 @@ object ImmType extends DecodeField[Insn, ImmTypeEnum.Type] {
 
 }
 
+object JumpEn extends BoolDecodeField[Insn] {
+  override def name: String = "may_cause_jump"
+
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    // Branch instructions
+    case "beq" | "bne" | "blt" | "bge" | "bltu" | "bgeu" => y
+    // Jump instructions
+    case "jal" | "jalr" => y
+    // All other instructions
+    case _ => n
+  }
+}
 object Rs1En extends BoolDecodeField[Insn] {
   override def name: String = "rs1_en"
 
@@ -143,6 +155,7 @@ class Decode extends Module {
     val rd_en    = Output(Bool())
     val opcode   = Output(UInt(8.W))
     val imm      = Output(UInt(64.W))
+    val jumpEn   = Output(Bool())
   })
   val inst = io.inst
 
@@ -155,7 +168,7 @@ class Decode extends Module {
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn,JumpEn))
   val decodedBundle = decodeTable.decode(inst)
 
   val imm_i: UInt = Cat(Fill(52, inst(31)), inst(31, 20))                              // I-type
@@ -183,6 +196,7 @@ class Decode extends Module {
   io.rs1_en := decodedBundle(Rs1En)
   io.rs2_en := decodedBundle(Rs2En)
   io.rd_en  := decodedBundle(RdEn)
+  io.jumpEn := decodedBundle(JumpEn)
 
   io.rs1_addr := inst(19, 15)
   io.rs2_addr := inst(24, 20)
