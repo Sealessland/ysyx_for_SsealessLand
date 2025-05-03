@@ -23,3 +23,5 @@ out/
 test_run_dir/
 ysyx-framework/
 chisel-env/
+riscv-opcodes/
+rvdecoderdb/

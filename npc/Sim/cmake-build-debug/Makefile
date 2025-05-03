@@ -142,173 +142,125 @@ run/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/run.dir/build.make CMakeFiles/run.dir/build
 .PHONY : run/fast
 
-exe.o: exe.cpp.o
-.PHONY : exe.o
-
 # target to build an object file
-exe.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/exe.cpp.o
-.PHONY : exe.cpp.o
-
-exe.i: exe.cpp.i
-.PHONY : exe.i
+core-exe.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core-exe.o
+.PHONY : core-exe.o
 
 # target to preprocess a source file
-exe.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/exe.cpp.i
-.PHONY : exe.cpp.i
-
-exe.s: exe.cpp.s
-.PHONY : exe.s
+core-exe.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core-exe.i
+.PHONY : core-exe.i
 
 # target to generate assembly for a file
-exe.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/exe.cpp.s
-.PHONY : exe.cpp.s
+core-exe.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core-exe.s
+.PHONY : core-exe.s
 
-main.o: main.cpp.o
+# target to build an object file
+cpu-exe.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/cpu-exe.o
+.PHONY : cpu-exe.o
+
+# target to preprocess a source file
+cpu-exe.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/cpu-exe.i
+.PHONY : cpu-exe.i
+
+# target to generate assembly for a file
+cpu-exe.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/cpu-exe.s
+.PHONY : cpu-exe.s
+
+# target to build an object file
+main.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.o
 .PHONY : main.o
 
-# target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.o
-.PHONY : main.cpp.o
-
-main.i: main.cpp.i
+# target to preprocess a source file
+main.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.i
 .PHONY : main.i
 
-# target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.i
-.PHONY : main.cpp.i
-
-main.s: main.cpp.s
+# target to generate assembly for a file
+main.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.s
 .PHONY : main.s
 
-# target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.s
-.PHONY : main.cpp.s
-
-mem.o: mem.cpp.o
+# target to build an object file
+mem.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mem.o
 .PHONY : mem.o
 
-# target to build an object file
-mem.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mem.cpp.o
-.PHONY : mem.cpp.o
-
-mem.i: mem.cpp.i
+# target to preprocess a source file
+mem.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mem.i
 .PHONY : mem.i
 
-# target to preprocess a source file
-mem.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mem.cpp.i
-.PHONY : mem.cpp.i
-
-mem.s: mem.cpp.s
+# target to generate assembly for a file
+mem.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mem.s
 .PHONY : mem.s
 
-# target to generate assembly for a file
-mem.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mem.cpp.s
-.PHONY : mem.cpp.s
-
-usr/share/verilator/include/verilated.o: usr/share/verilator/include/verilated.cpp.o
+# target to build an object file
+usr/share/verilator/include/verilated.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated.o
 .PHONY : usr/share/verilator/include/verilated.o
 
-# target to build an object file
-usr/share/verilator/include/verilated.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated.cpp.o
-.PHONY : usr/share/verilator/include/verilated.cpp.o
-
-usr/share/verilator/include/verilated.i: usr/share/verilator/include/verilated.cpp.i
+# target to preprocess a source file
+usr/share/verilator/include/verilated.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated.i
 .PHONY : usr/share/verilator/include/verilated.i
 
-# target to preprocess a source file
-usr/share/verilator/include/verilated.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated.cpp.i
-.PHONY : usr/share/verilator/include/verilated.cpp.i
-
-usr/share/verilator/include/verilated.s: usr/share/verilator/include/verilated.cpp.s
+# target to generate assembly for a file
+usr/share/verilator/include/verilated.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated.s
 .PHONY : usr/share/verilator/include/verilated.s
 
-# target to generate assembly for a file
-usr/share/verilator/include/verilated.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated.cpp.s
-.PHONY : usr/share/verilator/include/verilated.cpp.s
-
-usr/share/verilator/include/verilated_dpi.o: usr/share/verilator/include/verilated_dpi.cpp.o
+# target to build an object file
+usr/share/verilator/include/verilated_dpi.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_dpi.o
 .PHONY : usr/share/verilator/include/verilated_dpi.o
 
-# target to build an object file
-usr/share/verilator/include/verilated_dpi.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_dpi.cpp.o
-.PHONY : usr/share/verilator/include/verilated_dpi.cpp.o
-
-usr/share/verilator/include/verilated_dpi.i: usr/share/verilator/include/verilated_dpi.cpp.i
+# target to preprocess a source file
+usr/share/verilator/include/verilated_dpi.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_dpi.i
 .PHONY : usr/share/verilator/include/verilated_dpi.i
 
-# target to preprocess a source file
-usr/share/verilator/include/verilated_dpi.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_dpi.cpp.i
-.PHONY : usr/share/verilator/include/verilated_dpi.cpp.i
-
-usr/share/verilator/include/verilated_dpi.s: usr/share/verilator/include/verilated_dpi.cpp.s
+# target to generate assembly for a file
+usr/share/verilator/include/verilated_dpi.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_dpi.s
 .PHONY : usr/share/verilator/include/verilated_dpi.s
 
-# target to generate assembly for a file
-usr/share/verilator/include/verilated_dpi.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_dpi.cpp.s
-.PHONY : usr/share/verilator/include/verilated_dpi.cpp.s
-
-usr/share/verilator/include/verilated_threads.o: usr/share/verilator/include/verilated_threads.cpp.o
+# target to build an object file
+usr/share/verilator/include/verilated_threads.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_threads.o
 .PHONY : usr/share/verilator/include/verilated_threads.o
 
-# target to build an object file
-usr/share/verilator/include/verilated_threads.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_threads.cpp.o
-.PHONY : usr/share/verilator/include/verilated_threads.cpp.o
-
-usr/share/verilator/include/verilated_threads.i: usr/share/verilator/include/verilated_threads.cpp.i
+# target to preprocess a source file
+usr/share/verilator/include/verilated_threads.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_threads.i
 .PHONY : usr/share/verilator/include/verilated_threads.i
 
-# target to preprocess a source file
-usr/share/verilator/include/verilated_threads.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_threads.cpp.i
-.PHONY : usr/share/verilator/include/verilated_threads.cpp.i
-
-usr/share/verilator/include/verilated_threads.s: usr/share/verilator/include/verilated_threads.cpp.s
+# target to generate assembly for a file
+usr/share/verilator/include/verilated_threads.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_threads.s
 .PHONY : usr/share/verilator/include/verilated_threads.s
 
-# target to generate assembly for a file
-usr/share/verilator/include/verilated_threads.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_threads.cpp.s
-.PHONY : usr/share/verilator/include/verilated_threads.cpp.s
-
-usr/share/verilator/include/verilated_vcd_c.o: usr/share/verilator/include/verilated_vcd_c.cpp.o
+# target to build an object file
+usr/share/verilator/include/verilated_vcd_c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_vcd_c.o
 .PHONY : usr/share/verilator/include/verilated_vcd_c.o
 
-# target to build an object file
-usr/share/verilator/include/verilated_vcd_c.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_vcd_c.cpp.o
-.PHONY : usr/share/verilator/include/verilated_vcd_c.cpp.o
-
-usr/share/verilator/include/verilated_vcd_c.i: usr/share/verilator/include/verilated_vcd_c.cpp.i
+# target to preprocess a source file
+usr/share/verilator/include/verilated_vcd_c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_vcd_c.i
 .PHONY : usr/share/verilator/include/verilated_vcd_c.i
 
-# target to preprocess a source file
-usr/share/verilator/include/verilated_vcd_c.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_vcd_c.cpp.i
-.PHONY : usr/share/verilator/include/verilated_vcd_c.cpp.i
-
-usr/share/verilator/include/verilated_vcd_c.s: usr/share/verilator/include/verilated_vcd_c.cpp.s
-.PHONY : usr/share/verilator/include/verilated_vcd_c.s
-
 # target to generate assembly for a file
-usr/share/verilator/include/verilated_vcd_c.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_vcd_c.cpp.s
-.PHONY : usr/share/verilator/include/verilated_vcd_c.cpp.s
+usr/share/verilator/include/verilated_vcd_c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/usr/share/verilator/include/verilated_vcd_c.s
+.PHONY : usr/share/verilator/include/verilated_vcd_c.s
 
 # Help Target
 help:
@@ -320,9 +272,12 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... run"
 	@echo "... main"
-	@echo "... exe.o"
-	@echo "... exe.i"
-	@echo "... exe.s"
+	@echo "... core-exe.o"
+	@echo "... core-exe.i"
+	@echo "... core-exe.s"
+	@echo "... cpu-exe.o"
+	@echo "... cpu-exe.i"
+	@echo "... cpu-exe.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

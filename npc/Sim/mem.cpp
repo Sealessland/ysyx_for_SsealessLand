@@ -107,11 +107,38 @@ bool Memory::load_from_file(const std::string& filename, uint32_t offset) {
 void Memory::load_default_image(uint32_t offset) {
     // 简单的RISC-V指令序列示例
     const uint32_t default_program[] = {
-        0x00100513,  // li a0, 1
+        0x00100513,  // li a0, 1            # 设置初始值
         0x00200593,  // li a1, 2
-        0x00b50633,  // add a2, a0, a1
-        0x00c02023,  // sw a2, 0(zero)
-        0xffdff06f   // j -4 (无限循环)
+        0x00300613,  // li a2, 3
+        0x00b50633,  // add a2, a0, a1      # a2 = a0 + a1 = 3
+
+        // 内存存储测试
+        0x00c02023,  // sw a2, 0(zero)      # 存储a2到地址0x0
+        0x00a02223,  // sw a0, 4(zero)      # 存储a0到地址0x4
+        0x00b02423,  // sw a1, 8(zero)      # 存储a1到地址0x8
+
+        // 内存加载测试
+        0x00002703,  // lw a4, 0(zero)      # 从地址0x0加载到a4
+        0x00402783,  // lw a5, 4(zero)      # 从地址0x4加载到a5
+        0x00802803,  // lw a6, 8(zero)      # 从地址0x8加载到a6
+
+        // 字节和半字测试
+        0x00550023,  // sb a5, 0(a0)        # 存储a5的低字节到a0指向的地址
+        0x00551123,  // sh a5, 2(a0)        # 存储a5的低半字到a0+2指向的地址
+        0x00050883,  // lb a7, 0(a0)        # 加载a0指向地址的字节到a7
+        0x00251903,  // lh s2, 2(a0)        # 加载a0+2指向地址的半字到s2
+
+        // 使用偏移量的内存访问
+        0x01010513,  // addi a0, sp, 16     # 设置a0为sp+16
+        0x00c52023,  // sw a2, 0(a0)        # 存储a2到a0指向的地址
+        0x00052983,  // lw s3, 0(a0)        # 从a0指向的地址加载到s3
+
+        // 无符号加载测试
+        0xfff00513,  // li a0, -1           # 设置a0为-1 (0xFFFFFFFF)
+        0x00a02023,  // sw a0, 0(zero)      # 存储a0到地址0x0
+        0x00004703,  // lbu a4, 0(zero)     # 无符号字节加载
+        0x00005783,  // lhu a5, 0(zero)     # 无符号半字加载
+        0xf9dff06f  // j 0x80000000  # 从0x80000054跳转到0x80000000
     };
 
     // 计算程序大小
@@ -137,9 +164,13 @@ void Memory::load_default_image(uint32_t offset) {
 
 // DPI-C接口函数实现
 extern "C" void mem_read(uint32_t addr, uint32_t len, uint32_t* data) {
-    *data = get_memory().read(addr, len);
+    // 只有当地址小于0x80000000时才添加基址
+    uint32_t real_addr = (addr >= 0x80000000) ? addr : addr + 0x80000000;
+    *data = get_memory().read(real_addr, len);
 }
 
 extern "C" void mem_write(uint32_t addr, uint32_t len, uint32_t data) {
-    get_memory().write(addr, len, data);
+    // 只有当地址小于0x80000000时才添加基址
+    uint32_t real_addr = (addr >= 0x80000000) ? addr : addr + 0x80000000;
+    get_memory().write(real_addr, len, data);
 }
