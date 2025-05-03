@@ -1,31 +1,108 @@
-Chisel Project Template
+# RISC-V CPU核心实现
 =======================
 
-Another version of the [Chisel template](https://github.com/ucb-bar/chisel-template) supporting mill.
-mill is another Scala/Java build tool without obscure DSL like SBT. It is much faster than SBT.
+## 项目概述
 
-Contents at a glance:
+这是一个使用Chisel硬件描述语言实现的RISC-V CPU核心。该CPU支持RV32I指令集，实现了基本的五级流水线结构，包括取指、译码、执行、访存和写回阶段。
 
-* `.gitignore` - helps Git ignore junk like generated files, build products, and temporary files.
-* `build.sc` - instructs mill to build the Chisel project
-* `Makefile` - rules to call mill
-* `playground/src/GCD.scala` - GCD source file
-* `playground/src/DecoupledGCD.scala` - another GCD source file
-* `playground/src/Elaborate.scala` - wrapper file to call chisel command with the GCD module
-* `playground/test/src/GCDSpec.scala` - GCD tester
+## 架构设计
 
-Feel free to rename or delete files under `playground/` or use them as a reference/template.
+### 整体架构
 
-## Getting Started
+```
++---------------+    +---------------+    +---------------+    +---------------+
+|               |    |               |    |               |    |               |
+|   取指单元    | -> |   译码单元    | -> |   执行单元    | -> |   寄存器堆    |
+| (FetchUnit)   |    |   (Decode)    |    |  (execution)  |    |   (RegFile)   |
+|               |    |               |    |               |    |               |
++---------------+    +---------------+    +---------------+    +---------------+
+        ^                                        |
+        |                                        |
+        +----------------------------------------+
+                       更新PC
+```
 
-First, install mill by referring to the documentation [here](https://com-lihaoyi.github.io/mill).
+### 主要组件
 
-To run all tests in this design (recommended for test-driven development):
+1. **取指单元 (FetchUnit)**
+   - 负责从指令内存中获取指令
+   - 使用PC寄存器指向当前执行的指令
+   - 通过DPI-C接口与外部内存交互
+
+2. **译码单元 (Decode)**
+   - 解析指令，识别操作码、寄存器地址和立即数
+   - 支持RV32I指令集中的所有指令类型
+   - 使用rvdecoderdb库进行指令解码
+
+3. **执行单元 (execution)**
+   - 执行ALU操作
+   - 处理分支和跳转指令
+   - 执行内存访问操作（加载/存储）
+   - 实现内存访问状态机，处理内存访问时序
+
+4. **寄存器堆 (RegFile)**
+   - 32个32位通用寄存器
+   - 支持两个读端口和一个写端口
+   - 寄存器x0硬连线为0
+
+### 内存访问
+
+内存访问通过DPI-C接口实现，包括两个主要模块：
+- **DPIReadMemory**: 用于读取内存数据
+- **DPIWriteMemory**: 用于写入内存数据
+
+为了解决内存访问时序问题，实现了一个状态机来控制内存访问过程：
+1. 空闲状态：等待内存访问指令
+2. 读请求状态：发送读请求到内存
+3. 读等待状态：等待内存数据返回
+4. 写请求状态：发送写请求到内存
+
+## 支持的指令
+
+- **R型指令**: add, sub, sll, slt, sltu, xor, srl, sra, or, and
+- **I型指令**: addi, slti, sltiu, xori, ori, andi, slli, srli, srai
+- **加载指令**: lb, lh, lw, lbu, lhu
+- **存储指令**: sb, sh, sw
+- **分支指令**: beq, bne, blt, bge, bltu, bgeu
+- **跳转指令**: jal, jalr
+- **U型指令**: lui, auipc
+- **系统指令**: ecall, ebreak
+- **内存同步指令**: fence, fence.i
+
+## 使用方法
+
+### 环境要求
+
+- JDK 8或更高版本
+- SBT或Mill构建工具
+- Verilator（用于仿真）
+
+### 构建项目
+
+使用以下命令构建项目：
+
+```bash
+make verilog
+```
+
+这将生成Verilog代码，可以用于仿真或综合。
+
+### 运行测试
+
+使用以下命令运行测试：
+
 ```bash
 make test
 ```
 
-To generate Verilog:
-```bash
-make verilog
-```
+## 未来改进
+
+1. 实现更完整的流水线结构，包括前递和冒险检测
+2. 添加分支预测
+3. 实现缓存系统
+4. 支持RV64I指令集
+5. 添加性能计数器和调试功能
+
+## 贡献
+
+欢迎提交问题报告和改进建议。如果您想贡献代码，请先创建一个issue讨论您的想法。

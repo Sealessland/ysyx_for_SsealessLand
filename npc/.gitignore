@@ -10,13 +10,18 @@
 !*.cc
 !.gitignore
 !.scalafmt.conf
-!build.sc
 !README.md
-build/
+
 
 # mill
+!*.mill
+!.mill-version
 out/
 .bsp/
 .idea/
 .idea_modules/
 test_run_dir/
+ysyx-framework/
+chisel-env/
+riscv-opcodes/
+rvdecoderdb/
