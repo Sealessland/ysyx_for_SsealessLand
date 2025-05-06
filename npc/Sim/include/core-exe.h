@@ -25,6 +25,7 @@ public:
     void finalize();
     void run(const CoreConfig& cfg);
     void toggle_clock();
+    void run_insts(int insts);
     Vcore* get_core() { return core; }
 
 private:

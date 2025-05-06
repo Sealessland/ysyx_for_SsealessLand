@@ -132,7 +132,7 @@ VL_INLINE_OPT void Vcore___024root___nba_sequent__TOP__0(Vcore___024root* vlSelf
         }
     }
     if (vlSelfRef.reset) {
-        vlSelfRef.core__DOT__instfetch__DOT__pc = 0x80000000U;
+        vlSelfRef.core__DOT__instfetch__DOT__pc = 0x7ffffffcU;
         vlSelfRef.core__DOT__rf__DOT__rf_31 = 0U;
         vlSelfRef.core__DOT__rf__DOT__rf_30 = 0U;
         vlSelfRef.core__DOT__rf__DOT__rf_29 = 0U;
