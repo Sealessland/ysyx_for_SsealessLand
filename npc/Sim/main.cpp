@@ -16,7 +16,7 @@ CoreConfig parse_args(int argc, char** argv, std::string& memory_file) {
     cfg.wave_file = "wave.vcd";  // 默认波形文件名
     cfg.cycles = 300;             // 默认仿真周期数
     cfg.start_pc = 0x80000000;   // 默认起始PC
-    cfg.debug = false;            // 默认启用调试模式
+    cfg.debug = true;            // 默认启用调试模式
     memory_file = "";            // 默认不加载内存文件
 
     for (int i = 1; i < argc; i++) {

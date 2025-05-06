@@ -46,7 +46,7 @@ int cmd_c(char *args) {
 
   // 这里可以实现执行到下一个断点或者执行指定周期数
   // 暂时简单实现为执行100个周期
-  g_executor->run_cycles(500);
+  g_executor->run_insts(111);
   return 0;
 }
 

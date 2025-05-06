@@ -27,7 +27,7 @@ VERILATOR_MODEL = v_model/Vcore__ALL.a
 
 # 链接选项
 LDFLAGS = -lpthread -lreadline -g
-
+IMG?=
 # 创建build目录
 $(shell mkdir -p $(BUILD_DIR))
 
@@ -43,7 +43,7 @@ $(BUILD_DIR)/%.o: %.cpp
 run: main
 	$(call git_commit, "run npc sim") # DO NOT REMOVE THIS LINE!!
 
-	./main
+	./main -m $(IMG)
 	surfer wave.vcd
 
 
