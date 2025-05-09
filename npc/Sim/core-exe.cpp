@@ -5,9 +5,10 @@
 #include "include/core-exe.h"
 
 #include <iostream>
+#include <iomanip>  // 添加 iomanip 用于格式化输出
 #include <Vcore.h>
 #include "verilated.h"
-#include <stdio.h>
+
 CoreExecutor::CoreExecutor() : core(nullptr), tfp(nullptr), sim_time(0) {}
 
 CoreExecutor::~CoreExecutor() {
@@ -31,7 +32,7 @@ bool CoreExecutor::initialize(const CoreConfig& cfg) {
     std::cout << "Core仿真初始化完成，波形文件: " << cfg.wave_file << std::endl;
 
     // 执行复位周期
-    printf("执行复位周期...\n");
+    std::cout << "执行复位周期..." << std::endl;
     for (int i = 0; i < 2; i++) {
         toggle_clock();
     }
@@ -41,10 +42,14 @@ bool CoreExecutor::initialize(const CoreConfig& cfg) {
     core->clock = 1;
     core->eval();
     tfp->dump(sim_time++);
-    printf("复位后上升沿: PC=0x%08x, Inst=0x%08x\n", core->io_debugPC, core->io_debugInst);
+    std::cout << "复位后上升沿: PC=0x" << std::hex << std::setw(8) << std::setfill('0')
+              << core->io_debugPC << ", Inst=0x" << std::setw(8) << std::setfill('0')
+              << core->io_debugInst << std::dec << std::endl;
     core->clock = 0;
     core->eval();
-    printf("复位后下降沿: PC=0x%08x, Inst=0x%08x\n", core->io_debugPC, core->io_debugInst);
+    std::cout << "复位后下降沿: PC=0x" << std::hex << std::setw(8) << std::setfill('0')
+              << core->io_debugPC << ", Inst=0x" << std::setw(8) << std::setfill('0')
+              << core->io_debugInst << std::dec << std::endl;
     return true;
 }
 
@@ -55,12 +60,23 @@ void CoreExecutor::finalize() {
         delete tfp;
         tfp = nullptr;
     }
-    
+
     // 释放core模块
     if (core) {
         delete core;
         core = nullptr;
     }
+}
+void CoreExecutor::toggle_clock() {
+    // 时钟上升沿
+    core->clock = 1;
+    core->eval();
+    tfp->dump(sim_time++);
+
+    // 时钟下降沿
+    core->clock = 0;
+    core->eval();
+    tfp->dump(sim_time++);
 }
 
 void CoreExecutor::run(const CoreConfig& cfg) {
@@ -72,25 +88,16 @@ void CoreExecutor::run(const CoreConfig& cfg) {
 
         // 调试输出
         if (i % 10 == 0 || i == cfg.cycles - 1) {
-            printf("周期 %d: PC=0x%08x, Inst=0x%08x, DNPC=0x%08x\n",
-                   i, core->io_debugPC, core->io_debugInst, core->io_debugDNPC);
+            std::cout << "周期 " << i << ": PC=0x" << std::hex << std::setw(8) << std::setfill('0')
+                      << core->io_debugPC << ", Inst=0x" << std::setw(8) << std::setfill('0')
+                      << core->io_debugInst << ", DNPC=0x" << std::setw(8) << std::setfill('0')
+                      << core->io_debugDNPC << std::dec << std::endl;
         }
     }
 
     std::cout << "Core仿真完成，总周期数: " << cfg.cycles << std::endl;
 }
 
-void CoreExecutor::toggle_clock() {
-    // 时钟上升沿
-    core->clock = 1;
-    core->eval();
-    tfp->dump(sim_time++);
-    
-    // 时钟下降沿
-    core->clock = 0;
-    core->eval();
-    tfp->dump(sim_time++);
-}
 void CoreExecutor::run_insts(int insts) {
     if (insts <= 0) return;
 
@@ -98,7 +105,9 @@ void CoreExecutor::run_insts(int insts) {
     uint32_t current_pc = core->io_debugPC;
     uint32_t current_inst = core->io_debugInst;
 
-    printf("开始执行: PC=0x%08x, Inst=0x%08x\n", current_pc, current_inst);
+    std::cout << "开始执行: PC=0x" << std::hex << std::setw(8) << std::setfill('0')
+              << current_pc << ", Inst=0x" << std::setw(8) << std::setfill('0')
+              << std::dec << std::endl;
 
     while (executed_insts < insts && !Verilated::gotFinish()) {
         // 执行一个时钟周期
@@ -109,8 +118,14 @@ void CoreExecutor::run_insts(int insts) {
             executed_insts++;
 
             // 输出调试信息
-            printf("指令 %d: 从PC=0x%08x 到PC=0x%08x, Inst=0x%08x\n",
-                   executed_insts, current_pc, core->io_debugPC, current_inst);
+            std::cout << "指令 " << executed_insts << ": 从PC=0x" << std::hex << std::setw(8)
+                      << std::setfill('0') << current_pc << " 到PC=0x" << std::setw(8)
+                      << std::setfill('0') << core->io_debugPC << ", Inst=0x" << std::setw(8)
+                      << std::setfill('0') << current_inst << std::dec << std::endl;
+
+            std::cout << "开始执行: PC=0x" << std::hex << std::setw(8) << std::setfill('0')
+                      << current_pc << ", Inst=0x" << std::setw(8) << std::setfill('0')
+                      << std::dec << std::endl;
 
             // 更新当前PC和指令
             current_pc = core->io_debugPC;
@@ -118,5 +133,7 @@ void CoreExecutor::run_insts(int insts) {
         }
     }
 
-    printf("执行了 %d 条指令\n", executed_insts);
+    std::cout << "执行了 " << executed_insts << " 条指令" << std::endl;
 }
+
+// 在CoreExecutor类中添加一个成员函数

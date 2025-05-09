@@ -9,6 +9,7 @@
 #include <readline/history.h>
 #include <string.h>
 #include <regex>
+#include <reg.h>
 extern CoreExecutor* g_executor; // 全局执行器指针，需要在主程序中声明
 
 // 命令表
@@ -60,18 +61,23 @@ int cmd_q(char *args) {
 }
 
 // 打印寄存器状态
-int cmd_info(char *args) {
+int cmd_info(char *args){
   if (g_executor == nullptr || g_executor->get_core() == nullptr) {
     printf("错误: 执行器未初始化\n");
     return -1;
   }
 
   Vcore* core = g_executor->get_core();
-  printf("当前CPU状态:\n");
-  printf("PC = 0x%08x\n", core->io_debugPC);
-  printf("当前指令 = 0x%08x\n", core->io_debugInst);
-  printf("下一PC = 0x%08x\n", core->io_debugDNPC);
 
+  if (args != nullptr && strcmp(args, "r") == 0) {
+    printf("所有寄存器状态:\n");
+    printAllRegs(core); // 调用 printAllRegs 函数
+  } else {
+    printf("当前CPU状态:\n");
+    printf("PC = 0x%08x\n", core->io_debugPC);
+    printf("当前指令 = 0x%08x\n", core->io_debugInst);
+    printf("下一PC = 0x%08x\n", core->io_debugDNPC);
+  }
   return 0;
 }
 

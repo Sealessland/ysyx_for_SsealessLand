@@ -1,3 +1,4 @@
+#include "include/reg.h"
 #include <verilated.h>
 #include <Vcore.h>
 #include <Vcore___024root.h>
@@ -7,7 +8,6 @@
 #define REGNUM 32
 
 // 声明全局变量
-static Vcore* cpu = nullptr;  // Verilator 模型实例
 static uint32_t gpr[REGNUM];  // 通用寄存器数组
 static uint32_t pc;           // 程序计数器
 static uint32_t csr[4];       // CSR 寄存器
@@ -20,20 +20,10 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
-// 初始化函数，在主程序开始时调用
-void init_reg(Vcore* core_model) {
-  cpu = core_model;
-}
-
-// 获取寄存器值的函数
-void get_reg() {
-  if (!cpu) {
-    printf("错误：CPU 模型未初始化\n");
-    return;
-  }
-
-  // 必须通过 vlSymsp->TOP 或 rootp 访问内部信号
-  Vcore___024root* rootp = cpu->rootp;
+// 获取寄存器状态的函数
+void get_reg(Vcore* core) {
+  // 必须通过 rootp 访问内部信号
+  Vcore___024root* rootp = core->rootp;
 
   // 获取每个寄存器的值
   gpr[0] = 0;  // x0 永远为 0
@@ -79,8 +69,8 @@ void get_reg() {
 }
 
 // 显示寄存器值的函数
-void isa_reg_display() {
-  get_reg();  // 确保最新值
+void isa_reg_display(Vcore* core) {
+  get_reg(core);  // 确保最新值
 
   printf("\ndut-pc=%x\n", pc);
   for (int i = 0; i < REGNUM; i++) {
@@ -100,22 +90,95 @@ void isa_reg_display() {
 
 // 根据字符串获取寄存器值
 uint32_t isa_reg_str2val(const char *s, bool *success) {
-  get_reg();  // 确保最新值
+  *success = true;
 
   // 检查是否为 PC
   if (strcmp("pc", s+1) == 0) {
-    *success = true;
     return pc;
   }
 
   // 检查是否为通用寄存器
   for (int i = 0; i < REGNUM; i++) {
     if (strcmp(regs[i], s+1) == 0) {
-      *success = true;
       return gpr[i];
     }
   }
 
   *success = false;
   return 0;
+}
+
+// 获取寄存器值
+uint32_t getRegValue(Vcore* core, uint32_t regIndex) {
+  if (regIndex >= REGNUM) return 0;
+  get_reg(core);
+  return gpr[regIndex];
+}
+
+// 设置寄存器值
+void setRegValue(Vcore* core, uint32_t regIndex, uint32_t value) {
+  if (regIndex >= REGNUM || regIndex == 0) return; // x0不可写
+  Vcore___024root* rootp = core->rootp;
+
+  // 这里需要根据实际的Verilog模型结构设置寄存器值
+  // 示例实现，实际代码可能需要调整
+  switch(regIndex) {
+    case 1: rootp->core__DOT__rf__DOT__rf_1 = value; break;
+    case 2: rootp->core__DOT__rf__DOT__rf_2 = value; break;
+    // ...其他寄存器类似实现
+  }
+}
+
+// 获取寄存器名称
+std::string getRegName(uint32_t regIndex) {
+  if (regIndex >= REGNUM) return "invalid";
+  return regs[regIndex];
+}
+
+// 打印所有寄存器值
+void printAllRegs(Vcore* core) {
+  isa_reg_display(core);
+}
+
+// 打印特定寄存器值
+void printReg(Vcore* core, uint32_t regIndex) {
+  if (regIndex >= REGNUM) return;
+  get_reg(core);
+  printf("%s = ", regs[regIndex]);
+  if (gpr[regIndex] >= 0x02000000) {
+    printf("%#x\n", gpr[regIndex]);
+  } else {
+    printf("%d\n", gpr[regIndex]);
+  }
+}
+
+// 从寄存器名称获取索引
+uint32_t getRegIndexByName(const std::string& name) {
+  for (uint32_t i = 0; i < REGNUM; i++) {
+    if (name == regs[i]) return i;
+  }
+  return REGNUM; // 返回无效索引
+}
+
+// 从 ISA 名称获取寄存器值
+uint32_t getRegValueByName(Vcore* core, const std::string& name) {
+  uint32_t index = getRegIndexByName(name);
+  if (index >= REGNUM) return 0;
+  return getRegValue(core, index);
+}
+
+// 从 ISA 名称设置寄存器值
+void setRegValueByName(Vcore* core, const std::string& name, uint32_t value) {
+  uint32_t index = getRegIndexByName(name);
+  if (index < REGNUM) {
+    setRegValue(core, index, value);
+  }
+}
+
+// 打印 RISC-V 寄存器映射关系
+void isa2Reg() {
+  printf("RISC-V 寄存器映射关系：\n");
+  for (int i = 0; i < REGNUM; i++) {
+    printf("x%-2d: %s\n", i, regs[i]);
+  }
 }

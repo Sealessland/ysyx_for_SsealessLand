@@ -12,6 +12,7 @@ class Execution extends Module {
     val dmem   = new RamIO
     val branchCond =  Output(Bool())
   })
+  val ebreakInst = Module(new ebreak)
 
   // Default values
   io.out := 0.U
@@ -21,7 +22,8 @@ class Execution extends Module {
   io.dmem.wdata := 0.U
   io.dmem.wmask := 0.U
   io.branchCond:= 0.U
-
+  ebreakInst.io.clock := clock
+  ebreakInst.io.en := false.B
   switch(io.opcode) {
 
     // R-type arithmetic instructions
@@ -117,7 +119,7 @@ class Execution extends Module {
     
     // System instructions
     is("b00100110".U) { /* ecall: do nothing in executer */ }
-    is("b00100111".U) { /* ebreak: do nothing in executer */ }
+    is("b00100111".U) { ebreakInst.io.en := true.B }
     
     // Memory synchronization instructions
     is("b00101000".U) { /* fence: do nothing in executer */ }
