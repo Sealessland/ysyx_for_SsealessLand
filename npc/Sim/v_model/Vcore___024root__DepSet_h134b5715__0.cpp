@@ -24,6 +24,7 @@ void Vcore___024root___eval_nba(Vcore___024root* vlSelf) {
     }
 }
 
+void Vcore___024root____Vdpiimwrap_core__DOT__executer__DOT__ebreakInst__DOT__ebreak_handler_TOP();
 void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__mem_write_TOP(IData/*31:0*/ addr, IData/*31:0*/ len, IData/*31:0*/ data);
 void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__mem_read_TOP(IData/*31:0*/ addr, IData/*31:0*/ len, IData/*31:0*/ &data);
 
@@ -32,6 +33,29 @@ VL_INLINE_OPT void Vcore___024root___nba_sequent__TOP__0(Vcore___024root* vlSelf
     Vcore__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
     auto& vlSelfRef = std::ref(*vlSelf).get();
     // Body
+    if (((~ ((((IData)(vlSelfRef.core__DOT__executer__DOT___GEN_28) 
+               | ((0x14U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                  | ((IData)(vlSelfRef.core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_14) 
+                     | ((0x17U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                        | (0x18U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)))))) 
+              | ((0x19U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                 | ((0x1aU == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                    | (0x1bU == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2))))) 
+             | ((0x1cU == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                | ((0x1dU == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                   | ((0x1eU == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                      | ((0x1fU == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                         | ((0x20U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                            | ((0x21U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                               | ((0x22U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                                  | ((0x23U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                                     | ((0x24U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                                        | ((0x25U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
+                                           | (0x26U 
+                                              == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)))))))))))))) 
+         & (0x27U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)))) {
+        Vcore___024root____Vdpiimwrap_core__DOT__executer__DOT__ebreakInst__DOT__ebreak_handler_TOP();
+    }
     if ((((~ (IData)(vlSelfRef.core__DOT__executer__DOT___GEN_28)) 
           & ((0x14U == (IData)(vlSelfRef.__VdfgRegularize_hd87f99a1_0_2)) 
              | ((IData)(vlSelfRef.core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_14) 
@@ -2130,7 +2154,7 @@ void Vcore___024root___eval(Vcore___024root* vlSelf) {
 #ifdef VL_DEBUG
             Vcore___024root___dump_triggers__nba(vlSelf);
 #endif
-            VL_FATAL_MT("build/core.sv", 1649, "", "NBA region did not converge.");
+            VL_FATAL_MT("build/core.sv", 1664, "", "NBA region did not converge.");
         }
         __VnbaIterCount = ((IData)(1U) + __VnbaIterCount);
         __VnbaContinue = 0U;
@@ -2141,7 +2165,7 @@ void Vcore___024root___eval(Vcore___024root* vlSelf) {
 #ifdef VL_DEBUG
                 Vcore___024root___dump_triggers__act(vlSelf);
 #endif
-                VL_FATAL_MT("build/core.sv", 1649, "", "Active region did not converge.");
+                VL_FATAL_MT("build/core.sv", 1664, "", "Active region did not converge.");
             }
             vlSelfRef.__VactIterCount = ((IData)(1U) 
                                          + vlSelfRef.__VactIterCount);

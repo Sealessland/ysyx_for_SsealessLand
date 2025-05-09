@@ -34,6 +34,14 @@ VL_INLINE_OPT void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__D
     mem_write(addr__Vcvt, len__Vcvt, data__Vcvt);
 }
 
+extern "C" void ebreak_handler();
+
+VL_INLINE_OPT void Vcore___024root____Vdpiimwrap_core__DOT__executer__DOT__ebreakInst__DOT__ebreak_handler_TOP() {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vcore___024root____Vdpiimwrap_core__DOT__executer__DOT__ebreakInst__DOT__ebreak_handler_TOP\n"); );
+    // Body
+    ebreak_handler();
+}
+
 #ifdef VL_DEBUG
 VL_ATTR_COLD void Vcore___024root___dump_triggers__act(Vcore___024root* vlSelf);
 #endif  // VL_DEBUG

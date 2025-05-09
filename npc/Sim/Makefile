@@ -9,7 +9,6 @@ CPPFLAGS = -I$(VERILATOR_ROOT)/include \
            -I./include \
            -I./\
            -I./v_model/
-
 # 源文件
 SRC_FILES = $(wildcard ./*.cpp)
 
@@ -26,7 +25,7 @@ VERILATED_SRCS = $(VERILATOR_ROOT)/include/verilated.cpp \
 VERILATOR_MODEL = v_model/Vcore__ALL.a
 
 # 链接选项
-LDFLAGS = -lpthread -lreadline -g
+LDFLAGS = -lpthread -lreadline  -g
 IMG?=
 # 创建build目录
 $(shell mkdir -p $(BUILD_DIR))
@@ -42,9 +41,9 @@ $(BUILD_DIR)/%.o: %.cpp
 # 运行目标
 run: main
 	$(call git_commit, "run npc sim") # DO NOT REMOVE THIS LINE!!
+	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff ../../nemu/build/riscv32-nemu-interpreter-so
 
-	./main -m $(IMG)
-	surfer wave.vcd
+	#surfer wave.vcd
 
 
 # 清理目标
