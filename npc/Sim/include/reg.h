@@ -29,6 +29,6 @@ uint32_t getRegValueByName(Vcore* core, const std::string& name);
 // 从 ISA 名称设置寄存器值
 void setRegValueByName(Vcore* core, const std::string& name, uint32_t value);
 uint32_t isa_reg_str2val(const char *s, bool *success);
-
+void get_reg(Vcore* core);
 // 打印 RISC-V 寄存器映射关系
 void isa2Reg();

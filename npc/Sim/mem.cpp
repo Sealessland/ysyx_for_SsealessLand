@@ -7,6 +7,10 @@
 #include <iostream>
 #include <map>
 
+#ifdef DIFFTEST
+#include "include/difftest.h"
+#endif
+
 // 全局内存实例
 static Memory g_memory;
 
@@ -48,7 +52,9 @@ uint32_t Memory::read(uint32_t addr, uint32_t len) {
         result |= (value << (i * 8));
     }
 
+#ifdef MTRACE
     printf("内存读取：addr=0x%08x, len=%d, data=0x%08x\n", addr, len, result);
+#endif
     return result;
 }
 
@@ -68,7 +74,9 @@ void Memory::write(uint32_t addr, uint32_t len, uint32_t value) {
         block[block_offset] = (value >> (i * 8)) & 0xFF;
     }
 
+#ifdef MTRACE
     printf("内存写入：addr=0x%08x, len=%d, data=0x%08x\n", addr, len, value);
+#endif
 }
 
 // 从文件加载内存内容
@@ -97,6 +105,8 @@ bool Memory::load_from_file(const std::string& filename, uint32_t offset) {
         std::vector<uint8_t>& block = get_or_create_block(addr);
         block[block_offset] = static_cast<uint8_t>(buffer[i]);
     }
+
+
 
     printf("已加载内存映像: %s (%zu 字节) 到地址 0x%08x\n",
            filename.c_str(), filesize, offset);
@@ -166,6 +176,8 @@ void Memory::load_default_image(uint32_t offset) {
         }
     }
 
+
+
     printf("已加载内置默认内存镜像 (%zu 字节) 到地址 0x%08x\n",
            prog_size, offset);
 }
@@ -176,9 +188,9 @@ extern "C" void mem_read(uint32_t addr, uint32_t len, uint32_t* data) {
     uint32_t real_addr = (addr >= 0x80000000) ? addr : addr + 0x80000000;
     *data = get_memory().read(real_addr, len);
 }
-
 extern "C" void mem_write(uint32_t addr, uint32_t len, uint32_t data) {
-    // 只有当地址小于0x80000000时才添加基址
     uint32_t real_addr = (addr >= 0x80000000) ? addr : addr + 0x80000000;
     get_memory().write(real_addr, len, data);
+
+
 }

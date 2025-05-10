@@ -8,7 +8,7 @@
 #define REGNUM 32
 
 // 声明全局变量
-static uint32_t gpr[REGNUM];  // 通用寄存器数组
+ uint32_t gpr[REGNUM];  // 通用寄存器数组
 static uint32_t pc;           // 程序计数器
 static uint32_t csr[4];       // CSR 寄存器
 

@@ -12,6 +12,10 @@ CoreExecutor* g_executor = nullptr;
 
 int main(int argc, char** argv) {
     // 解析命令行参数
+#ifdef DIFFTEST
+    std::cout<<"marco enabled"<<std::endl;
+#endif
+
     CoreConfig cfg = parse_args(argc, argv);
 
     // 初始化Verilator上下文

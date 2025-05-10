@@ -23,7 +23,7 @@ CoreConfig parse_args(int argc, char** argv) {
     cfg.cycles = 300;
     cfg.start_pc = 0x80000000;
     cfg.debug = true;
-    cfg.diff_test = false;
+    cfg.diff_test = true;
     cfg.memory_file = "";
     cfg.diff_so = "";
     cfg.itrace = false;
