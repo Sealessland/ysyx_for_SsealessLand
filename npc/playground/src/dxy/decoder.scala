@@ -123,6 +123,8 @@ object JumpEn extends BoolDecodeField[Insn] {
     case "beq" | "bne" | "blt" | "bge" | "bltu" | "bgeu" => y
     // Jump instructions
     case "jal" | "jalr" => y
+
+    case "auipc"|"lui" => y
     // All other instructions
     case _ => n
   }

@@ -55,9 +55,34 @@ void add_mmio_map(const char *name, paddr_t addr, void *space, uint32_t len, io_
 
 /* bus interface */
 word_t mmio_read(paddr_t addr, int len) {
-  return map_read(addr, len, fetch_mmio_map(addr));
+  IOMap *map = fetch_mmio_map(addr);
+  word_t data = map_read(addr, len, map);
+  
+  #ifdef CONFIG_DTRACE
+  if (map != NULL) {
+    printf("DTRACE: MMIO read from [%s] addr = " FMT_PADDR ", len = %d, data = 0x%x\n", 
+           map->name, addr, len, data);
+  } else {
+    printf("DTRACE: MMIO read from [unknown] addr = " FMT_PADDR ", len = %d, data = 0x%x\n", 
+           addr, len, data);
+  }
+  #endif
+  
+  return data;
 }
 
 void mmio_write(paddr_t addr, int len, word_t data) {
-  map_write(addr, len, data, fetch_mmio_map(addr));
+  IOMap *map = fetch_mmio_map(addr);
+  
+  #ifdef CONFIG_DTRACE
+  if (map != NULL) {
+    printf("DTRACE: MMIO write to [%s] addr = " FMT_PADDR ", len = %d, data = 0x%x\n", 
+           map->name, addr, len, data);
+  } else {
+    printf("DTRACE: MMIO write to [unknown] addr = " FMT_PADDR ", len = %d, data = 0x%x\n", 
+           addr, len, data);
+  }
+  #endif
+  
+  map_write(addr, len, data, map);
 }

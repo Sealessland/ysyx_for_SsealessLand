@@ -6,6 +6,7 @@
 #include "include/parser.h"  // 添加parser头文件
 #include "verilated.h"
 #include <iostream>
+#include<states.h>
 
 // 全局执行器指针，供调试器使用
 CoreExecutor* g_executor = nullptr;
@@ -72,5 +73,14 @@ int main(int argc, char** argv) {
 
     // 清理全局指针
     g_executor = nullptr;
-    return 0;
+    int exit_code = 0;
+    if (is_exit_status_bad()) {
+        exit_code = cpu_state.halt_ret != 0 ? cpu_state.halt_ret : 1;
+        std::cout << "程序异常终止，退出码: " << exit_code << std::endl;
+    } else {
+        std::cout << "程序正常结束，退出码: 0" << std::endl;
+    }
+
+    return exit_code;
 }
+

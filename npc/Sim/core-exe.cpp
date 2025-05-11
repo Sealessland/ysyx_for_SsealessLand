@@ -108,7 +108,7 @@ void CoreExecutor::run(const CoreConfig& cfg) {
     // 直接运行指定周期数
     for (int i = 0; i < cfg.cycles && !Verilated::gotFinish(); i++) {
         toggle_clock();
-
+#ifdef ITRACE
         // 调试输出
         if (i % 10 == 0 || i == cfg.cycles - 1) {
             std::cout << "周期 " << i << ": PC=0x" << std::hex << std::setw(8) << std::setfill('0')
@@ -116,8 +116,9 @@ void CoreExecutor::run(const CoreConfig& cfg) {
                       << core->io_debugInst << ", DNPC=0x" << std::setw(8) << std::setfill('0')
                       << core->io_debugDNPC << std::dec << std::endl;
         }
+#endif
     }
-
+#
     std::cout << "Core仿真完成，总周期数: " << cfg.cycles << std::endl;
 }
 
@@ -135,7 +136,6 @@ void CoreExecutor::run_insts(int insts) {
     while (executed_insts < insts && !Verilated::gotFinish()) {
         // 执行一个时钟周期
         toggle_clock();
-
         // 如果PC发生变化，认为一条指令执行完成
         if (core->io_debugDNPC != current_pc) {
             executed_insts++;

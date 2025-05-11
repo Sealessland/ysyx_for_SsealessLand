@@ -193,6 +193,7 @@ bool difftest_init(const char* so_file, Vcore* core) {
 // 执行一步差分测试
 // 执行一步差分测试
 void difftest_step(Vcore* core) {
+    std::cout << "diff one step";
     if (!difftest::ref_difftest_memcpy) {
         return;
     }
@@ -217,17 +218,56 @@ void difftest_step(Vcore* core) {
     difftest::CPUState ref_r;
     difftest::ref_difftest_regcpy(&ref_r, difftest::DIFFTEST_TO_DUT);
 
-    // 检查结果
-    if (ref_r.pc != dut_r.pc || memcmp(ref_r.gpr, dut_r.gpr, sizeof(ref_r.gpr)) != 0) {
-        std::cout << "ref-pc=" << std::hex << ref_r.pc << std::dec << std::endl;
+    // 检查结果并输出详细的错误信息
+    bool match = true;
 
-        // 打印寄存器值（原有代码）
-        // ...
+    // 检查PC
+    if (ref_r.pc != dut_r.pc) {
+        match = false;
+        std::cout << "\n[差分测试失败] PC不匹配：" << std::endl;
+        std::cout << "参考PC = 0x" << std::hex << ref_r.pc << std::dec << std::endl;
+        std::cout << "DUT PC = 0x" << std::hex << dut_r.pc << std::dec << std::endl;
+    }
+
+    // 检查通用寄存器
+    for (int i = 0; i < REGNUM; i++) {
+        if (ref_r.gpr[i] != dut_r.gpr[i]) {
+            match = false;
+            std::cout << "\n[差分测试失败] 寄存器 " << regs[i] << " 不匹配：" << std::endl;
+            std::cout << "参考 " << regs[i] << " = 0x" << std::hex << ref_r.gpr[i] << std::dec
+                      << " (" << (int32_t)ref_r.gpr[i] << ")" << std::endl;
+            std::cout << "DUT " << regs[i] << " = 0x" << std::hex << dut_r.gpr[i] << std::dec
+                      << " (" << (int32_t)dut_r.gpr[i] << ")" << std::endl;
+        }
+    }
+
+    // 如果不匹配，显示所有状态
+    if (!match) {
+        std::cout << "\n======== 完整状态比较 ========" << std::endl;
+        std::cout << "参考 PC = 0x" << std::hex << ref_r.pc << std::dec << std::endl;
+        std::cout << "DUT PC = 0x" << std::hex << dut_r.pc << std::dec << std::endl;
+
+        std::cout << "\n===== 寄存器状态 =====" << std::endl;
+        for (int i = 0; i < REGNUM; i++) {
+            std::cout << regs[i] << ":\t";
+            std::cout << "参考 = 0x" << std::hex << ref_r.gpr[i] << std::dec;
+            std::cout << " | DUT = 0x" << std::hex << dut_r.gpr[i] << std::dec;
+
+            if (ref_r.gpr[i] != dut_r.gpr[i]) {
+                std::cout << " [不匹配]";
+            }
+
+            if ((i + 1) % 4 == 0) {
+                std::cout << std::endl;
+            } else {
+                std::cout << "\t";
+            }
+        }
+        std::cout << "\n===============================" << std::endl;
 
         assert(0 && "差分测试失败：寄存器状态不匹配");
     }
 }
-
 // 清理差分测试资源
 void difftest_cleanup() {
     // 如果需要清理资源，可以在这里实现
