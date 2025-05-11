@@ -1,13 +1,18 @@
 //
 // Created by sealessland on 25-4-30.
+////
+// Created by sealessland on 25-4-30.
 //
 
 #include "include/core-exe.h"
-
 #include <iostream>
-#include <iomanip>  // 添加 iomanip 用于格式化输出
+#include <iomanip>
 #include <Vcore.h>
 #include "verilated.h"
+
+#ifdef DIFFTEST
+#include "include/difftest.h"
+#endif
 
 CoreExecutor::CoreExecutor() : core(nullptr), tfp(nullptr), sim_time(0) {}
 
@@ -50,6 +55,11 @@ bool CoreExecutor::initialize(const CoreConfig& cfg) {
     std::cout << "复位后下降沿: PC=0x" << std::hex << std::setw(8) << std::setfill('0')
               << core->io_debugPC << ", Inst=0x" << std::setw(8) << std::setfill('0')
               << core->io_debugInst << std::dec << std::endl;
+
+#ifdef DIFFTEST
+    // 差分测试初始化已经在main.cpp中完成
+#endif
+
     return true;
 }
 
@@ -61,12 +71,18 @@ void CoreExecutor::finalize() {
         tfp = nullptr;
     }
 
+#ifdef DIFFTEST
+    // 清理差分测试资源
+    difftest_cleanup();
+#endif
+
     // 释放core模块
     if (core) {
         delete core;
         core = nullptr;
     }
 }
+
 void CoreExecutor::toggle_clock() {
     // 时钟上升沿
     core->clock = 1;
@@ -77,15 +93,22 @@ void CoreExecutor::toggle_clock() {
     core->clock = 0;
     core->eval();
     tfp->dump(sim_time++);
+
+#ifdef DIFFTEST
+    // 每个时钟周期执行一次差分测试
+    difftest_step(core);
+#endif
 }
 
 void CoreExecutor::run(const CoreConfig& cfg) {
     std::cout << "开始Core仿真，周期数: " << cfg.cycles << std::endl;
 
+    uint32_t last_pc = core->io_debugPC;
+
     // 直接运行指定周期数
     for (int i = 0; i < cfg.cycles && !Verilated::gotFinish(); i++) {
         toggle_clock();
-
+#ifdef ITRACE
         // 调试输出
         if (i % 10 == 0 || i == cfg.cycles - 1) {
             std::cout << "周期 " << i << ": PC=0x" << std::hex << std::setw(8) << std::setfill('0')
@@ -93,8 +116,9 @@ void CoreExecutor::run(const CoreConfig& cfg) {
                       << core->io_debugInst << ", DNPC=0x" << std::setw(8) << std::setfill('0')
                       << core->io_debugDNPC << std::dec << std::endl;
         }
+#endif
     }
-
+#
     std::cout << "Core仿真完成，总周期数: " << cfg.cycles << std::endl;
 }
 
@@ -107,16 +131,15 @@ void CoreExecutor::run_insts(int insts) {
 
     std::cout << "开始执行: PC=0x" << std::hex << std::setw(8) << std::setfill('0')
               << current_pc << ", Inst=0x" << std::setw(8) << std::setfill('0')
-              << std::dec << std::endl;
+              << current_inst << std::dec << std::endl;
 
     while (executed_insts < insts && !Verilated::gotFinish()) {
         // 执行一个时钟周期
         toggle_clock();
-
         // 如果PC发生变化，认为一条指令执行完成
         if (core->io_debugDNPC != current_pc) {
             executed_insts++;
-
+#ifdef ITRACE
             // 输出调试信息
             std::cout << "指令 " << executed_insts << ": 从PC=0x" << std::hex << std::setw(8)
                       << std::setfill('0') << current_pc << " 到PC=0x" << std::setw(8)
@@ -124,8 +147,9 @@ void CoreExecutor::run_insts(int insts) {
                       << std::setfill('0') << current_inst << std::dec << std::endl;
 
             std::cout << "开始执行: PC=0x" << std::hex << std::setw(8) << std::setfill('0')
-                      << current_pc << ", Inst=0x" << std::setw(8) << std::setfill('0')
-                      << std::dec << std::endl;
+                      << core->io_debugPC << ", Inst=0x" << std::setw(8) << std::setfill('0')
+                      << core->io_debugInst << std::dec << std::endl;
+#endif
 
             // 更新当前PC和指令
             current_pc = core->io_debugPC;
@@ -135,5 +159,3 @@ void CoreExecutor::run_insts(int insts) {
 
     std::cout << "执行了 " << executed_insts << " 条指令" << std::endl;
 }
-
-// 在CoreExecutor类中添加一个成员函数
