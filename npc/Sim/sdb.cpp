@@ -27,6 +27,7 @@ int nr_cmd = sizeof(cmd_table) / sizeof(cmd_table[0]);
 // 帮助命令实现
 int cmd_help(char *args) {
   printf("SDB - 简易调试器\n");
+
   printf("以下是支持的命令:\n\n");
 
   for (int i = 0; i < nr_cmd; i++) {
