@@ -12,10 +12,6 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-
-#include <isa.h>
-#include "local-include/reg.h"
-
 #include <isa.h>
 #include "local-include/reg.h"
 #define REGNUMBER ARRLEN(regs)

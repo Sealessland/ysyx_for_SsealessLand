@@ -31,6 +31,9 @@ public:
     void toggle_clock();
     void run_insts(int insts);
     Vcore* get_core() { return core; }
+    void print_instruction_info(uint32_t inst_num, uint32_t from_pc, uint32_t to_pc, uint32_t instruction);
+    void print_next_instruction(uint32_t pc, uint32_t instruction);
+    void print_execution_summary(int executed, int total);
 
 
 private:

@@ -113,145 +113,174 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc = isa_raise_intr(EVENT_YIELD, s->pc));
   INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , R, s->dnpc = CSR(MEPC));
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw, I, 
+#ifdef CONFIG_ITRACE
     printf("\n[CSRRW执行] PC=0x%08x\n", s->pc);
     printf("  CSR地址: 0x%03x (%s)\n", csri, 
            csri == 0x300 ? "mstatus" : 
            csri == 0x305 ? "mtvec" : 
            csri == 0x341 ? "mepc" : 
            csri == 0x342 ? "mcause" : "其他");
-    int t = CSR(csri); 
-    printf("  CSR原值: 0x%08x\n", t);
+    printf("  CSR原值: 0x%08x\n", CSR(csri));
     printf("  写入值(rs1=%lld): 0x%08x\n", BITS(s->isa.inst, 19, 15), src1);
-    CSR(csri) = src1; 
     printf("  目标寄存器(rd=%d): %s\n", rd, 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他");
+#endif
+    int t = CSR(csri); 
+    CSR(csri) = src1; 
     R(rd) = t;
+#ifdef CONFIG_ITRACE
     printf("  结果: CSR=0x%08x, %s=0x%08x\n", CSR(csri), 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他", R(rd));
+#endif
   );
+  
   INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs, I, 
+#ifdef CONFIG_ITRACE
     printf("\n[CSRRS执行] PC=0x%08x\n", s->pc);
     printf("  CSR地址: 0x%03x (%s)\n", csri, 
            csri == 0x300 ? "mstatus" : 
            csri == 0x305 ? "mtvec" : 
            csri == 0x341 ? "mepc" : 
            csri == 0x342 ? "mcause" : "其他");
-    int t = CSR(csri); 
-    printf("  CSR原值: 0x%08x\n", t);
+    printf("  CSR原值: 0x%08x\n", CSR(csri));
     printf("  设置位(rs1=%lld): 0x%08x\n", BITS(s->isa.inst, 19, 15), src1);
-    CSR(csri) = t | src1; 
     printf("  目标寄存器(rd=%d): %s\n", rd, 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他");
+#endif
+    int t = CSR(csri); 
+    CSR(csri) = t | src1; 
     R(rd) = t;
+#ifdef CONFIG_ITRACE
     printf("  结果: CSR=0x%08x, %s=0x%08x\n", CSR(csri), 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他", R(rd));
+#endif
   );
+  
   INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc, I, 
+#ifdef CONFIG_ITRACE
     printf("\n[CSRRC执行] PC=0x%08x\n", s->pc);
     printf("  CSR地址: 0x%03x (%s)\n", csri, 
            csri == 0x300 ? "mstatus" : 
            csri == 0x305 ? "mtvec" : 
            csri == 0x341 ? "mepc" : 
            csri == 0x342 ? "mcause" : "其他");
-    int t = CSR(csri); 
-    printf("  CSR原值: 0x%08x\n", t);
+    printf("  CSR原值: 0x%08x\n", CSR(csri));
     printf("  清除位(rs1=%lld): 0x%08x\n", BITS(s->isa.inst, 19, 15), src1);
-    CSR(csri) = t & ~src1; 
     printf("  目标寄存器(rd=%d): %s\n", rd, 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他");
+#endif
+    int t = CSR(csri); 
+    CSR(csri) = t & ~src1; 
     R(rd) = t;
+#ifdef CONFIG_ITRACE
     printf("  结果: CSR=0x%08x, %s=0x%08x\n", CSR(csri), 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他", R(rd));
+#endif
   );
+  
   INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrwi, I, 
     uint32_t zimm = BITS(s->isa.inst, 19, 15); // 零扩展的5位立即数
+#ifdef CONFIG_ITRACE
     printf("\n[CSRRWI执行] PC=0x%08x\n", s->pc);
     printf("  CSR地址: 0x%03x (%s)\n", csri, 
            csri == 0x300 ? "mstatus" : 
            csri == 0x305 ? "mtvec" : 
            csri == 0x341 ? "mepc" : 
            csri == 0x342 ? "mcause" : "其他");
-    int t = CSR(csri); 
-    printf("  CSR原值: 0x%08x\n", t);
+    printf("  CSR原值: 0x%08x\n", CSR(csri));
     printf("  写入立即数: 0x%02x\n", zimm);
-    CSR(csri) = zimm; 
     printf("  目标寄存器(rd=%d): %s\n", rd, 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他");
+#endif
+    int t = CSR(csri); 
+    CSR(csri) = zimm; 
     R(rd) = t;
+#ifdef CONFIG_ITRACE
     printf("  结果: CSR=0x%08x, %s=0x%08x\n", CSR(csri), 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他", R(rd));
+#endif
   );
+  
   INSTPAT("??????? ????? ????? 110 ????? 11100 11", csrrsi, I, 
     uint32_t zimm = BITS(s->isa.inst, 19, 15); // 零扩展的5位立即数
+#ifdef CONFIG_ITRACE
     printf("\n[CSRRSI执行] PC=0x%08x\n", s->pc);
     printf("  CSR地址: 0x%03x (%s)\n", csri, 
            csri == 0x300 ? "mstatus" : 
            csri == 0x305 ? "mtvec" : 
            csri == 0x341 ? "mepc" : 
            csri == 0x342 ? "mcause" : "其他");
-    int t = CSR(csri); 
-    printf("  CSR原值: 0x%08x\n", t);
+    printf("  CSR原值: 0x%08x\n", CSR(csri));
     printf("  设置立即数位: 0x%02x\n", zimm);
-    CSR(csri) = t | zimm; 
     printf("  目标寄存器(rd=%d): %s\n", rd, 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他");
+#endif
+    int t = CSR(csri); 
+    CSR(csri) = t | zimm; 
     R(rd) = t;
+#ifdef CONFIG_ITRACE
     printf("  结果: CSR=0x%08x, %s=0x%08x\n", CSR(csri), 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他", R(rd));
+#endif
   );
+  
   INSTPAT("??????? ????? ????? 111 ????? 11100 11", csrrci, I, 
     uint32_t zimm = BITS(s->isa.inst, 19, 15); // 零扩展的5位立即数
+#ifdef CONFIG_ITRACE
     printf("\n[CSRRCI执行] PC=0x%08x\n", s->pc);
     printf("  CSR地址: 0x%03x (%s)\n", csri, 
            csri == 0x300 ? "mstatus" : 
            csri == 0x305 ? "mtvec" : 
            csri == 0x341 ? "mepc" : 
            csri == 0x342 ? "mcause" : "其他");
-    int t = CSR(csri); 
-    printf("  CSR原值: 0x%08x\n", t);
+    printf("  CSR原值: 0x%08x\n", CSR(csri));
     printf("  清除立即数位: 0x%02x\n", zimm);
-    CSR(csri) = t & ~zimm; 
     printf("  目标寄存器(rd=%d): %s\n", rd, 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他");
+#endif
+    int t = CSR(csri); 
+    CSR(csri) = t & ~zimm; 
     R(rd) = t;
+#ifdef CONFIG_ITRACE
     printf("  结果: CSR=0x%08x, %s=0x%08x\n", CSR(csri), 
            rd == 0 ? "$zero" : 
            rd == 1 ? "ra" : 
            rd == 2 ? "sp" : 
            rd == 10 ? "a0" : "其他", R(rd));
+#endif
   );
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END(); 

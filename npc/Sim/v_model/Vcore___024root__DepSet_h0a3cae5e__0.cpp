@@ -6,24 +6,38 @@
 #include "Vcore__Syms.h"
 #include "Vcore___024root.h"
 
-extern "C" void mem_read(int addr, int len, int* data);
+extern "C" void inst_mem_read(int addr, int len, int* data);
 
-VL_INLINE_OPT void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__mem_read_TOP(IData/*31:0*/ addr, IData/*31:0*/ len, IData/*31:0*/ &data) {
-    VL_DEBUG_IF(VL_DBG_MSGF("+    Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__mem_read_TOP\n"); );
+VL_INLINE_OPT void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__inst_mem_read_TOP(IData/*31:0*/ addr, IData/*31:0*/ len, IData/*31:0*/ &data) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__inst_mem_read_TOP\n"); );
     // Body
     int addr__Vcvt;
     for (size_t addr__Vidx = 0; addr__Vidx < 1; ++addr__Vidx) addr__Vcvt = addr;
     int len__Vcvt;
     for (size_t len__Vidx = 0; len__Vidx < 1; ++len__Vidx) len__Vcvt = len;
     int data__Vcvt;
-    mem_read(addr__Vcvt, len__Vcvt, &data__Vcvt);
+    inst_mem_read(addr__Vcvt, len__Vcvt, &data__Vcvt);
     data = data__Vcvt;
 }
 
-extern "C" void mem_write(int addr, int len, int data);
+extern "C" void data_mem_read(int addr, int len, int* data);
 
-VL_INLINE_OPT void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__mem_write_TOP(IData/*31:0*/ addr, IData/*31:0*/ len, IData/*31:0*/ data) {
-    VL_DEBUG_IF(VL_DBG_MSGF("+    Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__mem_write_TOP\n"); );
+VL_INLINE_OPT void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__data_mem_read_TOP(IData/*31:0*/ addr, IData/*31:0*/ len, IData/*31:0*/ &data) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__data_mem_read_TOP\n"); );
+    // Body
+    int addr__Vcvt;
+    for (size_t addr__Vidx = 0; addr__Vidx < 1; ++addr__Vidx) addr__Vcvt = addr;
+    int len__Vcvt;
+    for (size_t len__Vidx = 0; len__Vidx < 1; ++len__Vidx) len__Vcvt = len;
+    int data__Vcvt;
+    data_mem_read(addr__Vcvt, len__Vcvt, &data__Vcvt);
+    data = data__Vcvt;
+}
+
+extern "C" void data_mem_write(int addr, int len, int data);
+
+VL_INLINE_OPT void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__data_mem_write_TOP(IData/*31:0*/ addr, IData/*31:0*/ len, IData/*31:0*/ data) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__DOT__data_mem_write_TOP\n"); );
     // Body
     int addr__Vcvt;
     for (size_t addr__Vidx = 0; addr__Vidx < 1; ++addr__Vidx) addr__Vcvt = addr;
@@ -31,7 +45,7 @@ VL_INLINE_OPT void Vcore___024root____Vdpiimwrap_core__DOT__ram2r1w__DOT__mem__D
     for (size_t len__Vidx = 0; len__Vidx < 1; ++len__Vidx) len__Vcvt = len;
     int data__Vcvt;
     for (size_t data__Vidx = 0; data__Vidx < 1; ++data__Vidx) data__Vcvt = data;
-    mem_write(addr__Vcvt, len__Vcvt, data__Vcvt);
+    data_mem_write(addr__Vcvt, len__Vcvt, data__Vcvt);
 }
 
 extern "C" void ebreak_handler();

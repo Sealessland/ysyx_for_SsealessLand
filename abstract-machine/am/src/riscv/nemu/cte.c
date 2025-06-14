@@ -38,13 +38,10 @@ Context* __am_irq_handle(Context *c) {
            ev.event == EVENT_ERROR ? "EVENT_ERROR" :
            ev.event == EVENT_IRQ_TIMER ? "EVENT_IRQ_TIMER" :
            ev.event == EVENT_IRQ_IODEV ? "EVENT_IRQ_IODEV" : "未知事件");
-    
     printf("ev.cause: 0x%lx\n", ev.cause);
     printf("ev.ref: 0x%lx\n", ev.ref);
     printf("ev.msg: %s\n", ev.msg ? ev.msg : "(null)");
-    
-    // 其余代码保持不变...
-    printf("\n------- 触发事件的原始信息 -------\n");
+        printf("\n------- 触发事件的原始信息 -------\n");
     printf("mcause: 0x%lx\n", c->mcause);
     printf("mepc: 0x%lx\n", c->mepc);
     printf("mstatus: 0x%lx\n", c->mstatus);
@@ -77,7 +74,12 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  return NULL;
+  Context *c = (Context *)kstack.end - sizeof(Context);
+  memset(c, 0, sizeof(Context));
+  c->mepc = (uintptr_t)entry;
+  c->gpr[10] = (uintptr_t)arg; // a0
+  c->mstatus = 0x1800; 
+  return c;
 }
 
 void yield() {

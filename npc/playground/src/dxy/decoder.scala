@@ -75,10 +75,20 @@ object Opcode extends DecodeField[Insn, UInt] {
   case "ecall"  => BitPat("b00100110")
   case "ebreak" => BitPat("b00100111")
 
+
+
+
     // 内存同步指令
   case "fence"  => BitPat("b00101000")
   case "fence.i"=> BitPat("b00101001")
-
+  
+  // CSR指令
+  case "csrrw"  => BitPat("b00101010")
+  case "csrrs"  => BitPat("b00101011") 
+  case "csrrc"  => BitPat("b00101100")
+  case "csrrwi" => BitPat("b00101101")
+  case "csrrsi" => BitPat("b00101110")
+  case "csrrci" => BitPat("b00101111")
     // 默认情况
   case _        => BitPat("b00000000")
 
@@ -115,17 +125,22 @@ object ImmType extends DecodeField[Insn, ImmTypeEnum.Type] {
 
 }
 
-object JumpEn extends BoolDecodeField[Insn] {
+object pcEn extends BoolDecodeField[Insn] {
   override def name: String = "may_cause_jump"
 
   override def genTable(i: Insn): BitPat = i.inst.name match {
     // Branch instructions
-    case "beq" | "bne" | "blt" | "bge" | "bltu" | "bgeu" => y
     // Jump instructions
     case "jal" | "jalr" => y
-
     case "auipc"|"lui" => y
     // All other instructions
+    case _ => n
+  }
+}
+object JalrEn extends BoolDecodeField[Insn] {
+  override def name: String = "jalr_en"
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "jalr" => y
     case _ => n
   }
 }
@@ -146,6 +161,20 @@ object RdEn extends BoolDecodeField[Insn] {
 
   override def genTable(i: Insn): BitPat = if (i.hasArg("rd")) y else n
 }
+
+object CsrEn extends BoolDecodeField[Insn] {
+  override def name: String = "csr_en"
+  
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "csrrw"  => BitPat("b1")
+    case "csrrs"  => BitPat("b1") 
+    case "csrrc"  => BitPat("b1")
+    case "csrrwi" => BitPat("b1")
+    case "csrrsi" => BitPat("b1")
+    case "csrrci" => BitPat("b1")
+    case _        => BitPat("b0")
+  }
+}
 class Decode extends Module {
   val io = IO(new Bundle {
     val inst = Input(UInt(32.W))
@@ -157,7 +186,9 @@ class Decode extends Module {
     val rd_en    = Output(Bool())
     val opcode   = Output(UInt(8.W))
     val imm      = Output(UInt(64.W))
-    val jumpEn   = Output(Bool())
+    val pcEn     = Output(Bool())
+    val jalrEn   = Output(Bool())
+    val csrEn   = Output(Bool())
   })
   val inst = io.inst
 
@@ -170,7 +201,7 @@ class Decode extends Module {
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn,JumpEn))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, JalrEn, pcEn, CsrEn))
   val decodedBundle = decodeTable.decode(inst)
 
   val imm_i: UInt = Cat(Fill(52, inst(31)), inst(31, 20))                              // I-type
@@ -198,10 +229,11 @@ class Decode extends Module {
   io.rs1_en := decodedBundle(Rs1En)
   io.rs2_en := decodedBundle(Rs2En)
   io.rd_en  := decodedBundle(RdEn)
-  io.jumpEn := decodedBundle(JumpEn)
-
+  io.pcEn := decodedBundle(pcEn)
+  io.jalrEn:= decodedBundle(JalrEn)
   io.rs1_addr := inst(19, 15)
   io.rs2_addr := inst(24, 20)
   io.rd_addr  := inst(11, 7)
+  io.csrEn := decodedBundle(CsrEn)
   println(decodeTable, decodedBundle)
 }

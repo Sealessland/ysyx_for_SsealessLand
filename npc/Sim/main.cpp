@@ -1,4 +1,5 @@
 // main.cpp
+#include<disasm.h>
 #include "include/mem.h"
 #include "include/core-exe.h"
 #include "include/sdb.h"
@@ -12,6 +13,16 @@
 CoreExecutor* g_executor = nullptr;
 
 int main(int argc, char** argv) {
+    test_disassembler();
+    
+    // 反汇编单条指令
+    uint32_t instruction = 0x009704b3;  // add s1, a4, s1
+    uint32_t addr = 0x80000114;
+    
+    std::cout << disassemble(addr, instruction) << std::endl;
+    std::cout << disassemble_with_colors(addr, instruction) << std::endl;
+    
+
     // 解析命令行参数
 #ifdef DIFFTEST
     std::cout<<"marco enabled"<<std::endl;
@@ -63,7 +74,7 @@ int main(int argc, char** argv) {
         sdb_mainloop();
     } else {
         // 直接运行
-        executor.run(cfg);
+        executor.run_insts(-1);
     }
 
     // 清理差分测试资源
