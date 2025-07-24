@@ -155,13 +155,13 @@ object Rs2En extends BoolDecodeField[Insn] {
   override def genTable(i: Insn): BitPat = if (i.hasArg("rs2")) y else n
 }
 
-object RdEn extends BoolDecodeField[Insn] {
+object rdEn extends BoolDecodeField[Insn] {
   override def name: String = "rd_en"
 
   override def genTable(i: Insn): BitPat = if (i.hasArg("rd")) y else n
 }
 
-object CsrEn extends BoolDecodeField[Insn] {
+object csrEn extends BoolDecodeField[Insn] {
   override def name: String = "csr_en"
 
   override def genTable(i: Insn): BitPat = i.inst.name match {
@@ -174,42 +174,38 @@ object CsrEn extends BoolDecodeField[Insn] {
     case _        => BitPat("b0")
   }
 }
+
+
+
 class D2E extends Bundle{
-  val rs1_addr = Output(UInt(5.W))
-  val rs1_en   = Output(Bool())
-  val rs2_addr = Output(UInt(5.W))
-  val rs2_en   = Output(Bool())
+  val rs1_data = UInt(32.W)
+  val rs2_data = UInt(32.W)
   val rd_addr  = Output(UInt(5.W))
   val rd_en    = Output(Bool())
   val opcode   = Output(UInt(8.W))
   val imm      = Output(UInt(64.W))
   val pc       = Output(UInt(32.W)) // PC value for the instruction
-  val pcEn     = Output(Bool())
-  val jalrEn   = Output(Bool())
-  val csrEn   = Output(Bool())
+  val pc_en     = Output(Bool())
+  val jalr_en   = Output(Bool())
+  val csr_en   = Output(Bool())
 }
-
+class D2R extends Bundle{
+  val rs1_addr = Output(UInt(5.W))
+  val rs1_en   = Output(Bool())
+  val rs2_addr = Output(UInt(5.W))
+  val rs2_en   = Output(Bool())
+}
 class DUBus extends Bundle {
   val in = Flipped(Decoupled(new F2D))
   val out =Decoupled(new D2E)
+  val d2r = new D2R
+  val r2d = Flipped(new R2E)
+
 }
 
 class Decode extends Module {
-  val io = IO(new Bundle {
-    val inst = Input(UInt(32.W))
-    val rs1_addr = Output(UInt(5.W))
-    val rs1_en   = Output(Bool())
-    val rs2_addr = Output(UInt(5.W))
-    val rs2_en   = Output(Bool())
-    val rd_addr  = Output(UInt(5.W))
-    val rd_en    = Output(Bool())
-    val opcode   = Output(UInt(8.W))
-    val imm      = Output(UInt(64.W))
-    val pcEn     = Output(Bool())
-    val jalrEn   = Output(Bool())
-    val csrEn   = Output(Bool())
-  })
-  val inst = io.inst
+  val io = IO(new DUBus)
+  val inst = io.in.bits.inst
 
   val instTable  = rvdecoderdb.instructions(os.pwd / "riscv-opcodes")
   val targetSets = Set("rv_i", "rv64_i", "rv_m", "rv64_m")
@@ -220,7 +216,7 @@ class Decode extends Module {
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, JalrEn, pcEn, CsrEn))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, rdEn, JalrEn, pcEn, csrEn))
   val decodedBundle = decodeTable.decode(inst)
 
   val imm_i: UInt = Cat(Fill(52, inst(31)), inst(31, 20))                              // I-type
@@ -230,10 +226,10 @@ class Decode extends Module {
   val imm_j      = Cat(Fill(44, inst(31)), inst(19, 12), inst(20), inst(30, 21), 0.U) // J-type
   val imm_shamtd = Cat(Fill(58, 0.U), inst(25, 20))
   val imm_shamtw = Cat(Fill(59, 0.U), inst(24, 20))
-  io.opcode := decodedBundle(Opcode)
+  io.out.bits.opcode := decodedBundle(Opcode)
 
   val imm_type = decodedBundle(ImmType)
-  io.imm := MuxLookup(imm_type, 0.U)(
+  io.out.bits.imm := MuxLookup(imm_type, 0.U)(
     Seq(
       ImmTypeEnum.immI      -> imm_i,
       ImmTypeEnum.immS      -> imm_s,
@@ -245,14 +241,19 @@ class Decode extends Module {
     )
   )
 
-  io.rs1_en := decodedBundle(Rs1En)
-  io.rs2_en := decodedBundle(Rs2En)
-  io.rd_en  := decodedBundle(RdEn)
-  io.pcEn := decodedBundle(pcEn)
-  io.jalrEn:= decodedBundle(JalrEn)
-  io.rs1_addr := inst(19, 15)
-  io.rs2_addr := inst(24, 20)
-  io.rd_addr  := inst(11, 7)
-  io.csrEn := decodedBundle(CsrEn)
+  io.out.bits.rs1_data := io.r2d.rs1_data
+  io.out.bits.rs2_data := io.r2d.rs2_data
+  io.out.bits.pc     := io.in.bits.pc // Pass the PC value from F2D to D2E
+  io.d2r.rs1_en   := decodedBundle(Rs1En)
+  io.d2r.rs2_en   := decodedBundle(Rs2En)
+  io.out.bits.rd_en    := decodedBundle(rdEn)
+  io.out.bits.pc_en     := decodedBundle(pcEn)
+  io.out.bits.jalr_en   := decodedBundle(JalrEn)
+  io.d2r.rs1_addr := inst(19, 15)
+  io.d2r.rs2_addr := inst(24, 20)
+  io.out.bits.rd_addr  := inst(11, 7)
+  io.out.bits.csr_en    := decodedBundle(csrEn)
+  io.in.ready := io.out.ready
+  io.out.valid:=io.in.valid
   println(decodeTable, decodedBundle)
 }
