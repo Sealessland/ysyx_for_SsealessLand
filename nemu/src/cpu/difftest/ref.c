@@ -57,10 +57,20 @@ __EXPORT void difftest_raise_intr(word_t NO) {
   assert(0);
 }
 
-__EXPORT void difftest_init(int port) {
-  printf("asdddddddddddddddddddddddddd");
+__EXPORT bool difftest_checkmem(paddr_t addr, int len, word_t dut_data, bool is_write) {
+  if (is_write) {
+    // 写操作：比较DUT写入的数据和REF中该地址的数据
+    word_t ref_data = paddr_read(addr, len);
+    return ref_data == dut_data;
+  } else {
+    // 读操作：比较DUT读到的数据和REF读到的数据
+    word_t ref_data = paddr_read(addr, len);
+    return ref_data == dut_data;
+  }
+}
+
+__EXPORT void difftest_init() {
   void init_mem();
-  printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 
   init_mem();
   /* Perform ISA dependent initialization. */

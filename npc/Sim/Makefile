@@ -7,8 +7,8 @@ BUILD_DIR = build
 
 # 条件编译选项
 DIFFTEST ?= 1  # 默认启用差分测试
-MTRACE ?= 0    # 默认禁用内存跟踪
-ITRACE ?= 0    # 默认禁用指令跟踪
+MTRACE ?= 1    # 默认禁用内存跟踪
+#ITRACE ?= 0    # 默认禁用指令跟踪
 
 # 初始化基础CPPFLAGS
 CPPFLAGS = -I$(VERILATOR_ROOT)/include \
@@ -37,6 +37,7 @@ VERILATED_SRCS = $(VERILATOR_ROOT)/include/verilated.cpp \
                  $(VERILATOR_ROOT)/include/verilated_dpi.cpp
 VERILATOR_MODEL = v_model/Vcore__ALL.a
 LDFLAGS = -lpthread -lreadline -g
+LDFLAGS += -lcapstone
 IMG ?=
 
 $(shell mkdir -p $(BUILD_DIR))
@@ -58,8 +59,7 @@ $(BUILD_DIR)/%.o: %.cpp
 
 run: main
 	$(call git_commit, "run npc sim") # DO NOT REMOVE THIS LINE!!
-	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff ../../nemu/build/riscv32-nemu-interpreter-so
-
+	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff ../../nemu/build/riscv32-nemu-interpreter-so  -m #TestBin/crc32-riscv32e-npc.bin
 run_nodiff: main
 	$(call git_commit, "run npc sim without difftest") # DO NOT REMOVE THIS LINE!!
 	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main
@@ -67,3 +67,7 @@ run_nodiff: main
 clean:
 	rm -f main
 	rm -rf $(BUILD_DIR)
+
+debug: main
+	$(call git_commit, "debug npc sim") # DO NOT REMOVE THIS LINE!!
+	gdb ./main

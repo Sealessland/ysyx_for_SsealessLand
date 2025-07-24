@@ -15,6 +15,10 @@ Vcore::Vcore(VerilatedContext* _vcontextp__, const char* _vcname__)
     , io_debugPC{vlSymsp->TOP.io_debugPC}
     , io_debugInst{vlSymsp->TOP.io_debugInst}
     , io_debugDNPC{vlSymsp->TOP.io_debugDNPC}
+    , io_debugin1{vlSymsp->TOP.io_debugin1}
+    , io_debugin2{vlSymsp->TOP.io_debugin2}
+    , io_debugBranch{vlSymsp->TOP.io_debugBranch}
+    , io_debugImm{vlSymsp->TOP.io_debugImm}
     , rootp{&(vlSymsp->TOP)}
 {
     // Register model with the context

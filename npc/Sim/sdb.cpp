@@ -3,6 +3,7 @@
 #include "include/mem.h"
 #include "include/core-exe.h"
 #include <Vcore.h>
+#include<states.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <readline/readline.h>
@@ -27,6 +28,7 @@ int nr_cmd = sizeof(cmd_table) / sizeof(cmd_table[0]);
 // 帮助命令实现
 int cmd_help(char *args) {
   printf("SDB - 简易调试器\n");
+
   printf("以下是支持的命令:\n\n");
 
   for (int i = 0; i < nr_cmd; i++) {
@@ -47,13 +49,15 @@ int cmd_c(char *args) {
 
   // 这里可以实现执行到下一个断点或者执行指定周期数
   // 暂时简单实现为执行100个周期
-  g_executor->run_insts(111);
+  cpu_state.state=CPU_STATES::CPU_RUNNING;
+  g_executor->run_insts(999999);
   return 0;
 }
 
 // 退出命令
 int cmd_q(char *args) {
   if (g_executor != nullptr) {
+    cpu_state.state=CPU_STATES::CPU_STOP;
     g_executor->finalize();
   }
   exit(0);

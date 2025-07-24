@@ -45,47 +45,64 @@ class ram_2r1w extends BlackBox with HasBlackBoxInline {
       |    input         dmem_wen
       |  );
       |
-      |  import "DPI-C" function void mem_read(input int addr, input int len, output int data);
-      |  import "DPI-C" function void mem_write(input int addr, input int len, input int data);
+      |  import "DPI-C" function void inst_mem_read(input int addr, input int len, output int data);
+      |  import "DPI-C" function void data_mem_read(input int addr, input int len, output int data);
+      |  import "DPI-C" function void data_mem_write(input int addr, input int len, input int data);
       |
-      |  // 临时变量用于 DPI-C 调用结果
-      |  reg [31:0] mem_rdata;
-      |  reg [63:0] mem_rdata_64;
-      |
-      |  // 指令内存读取 (imem)
-      |  wire [31:0] addr_offset_imem = imem_addr - 32'h80000000;
-      |
+      |  // 临时变量
+      |  reg [31:0] imem_rdata_reg;
+      |  reg [63:0] dmem_rdata_reg;
+      |  
+      |  // 指令内存读取 - 4字节对齐
+      |  wire [31:0] imem_addr_aligned = imem_addr[31:0] & 32'hfffffffc;
+      |  
       |  always @(*) begin
       |    if (imem_en) begin
-      |      mem_read(addr_offset_imem, 4, mem_rdata); // 指令读取使用4字节长度
+      |      inst_mem_read(imem_addr_aligned, 4, imem_rdata_reg);
+      |    end else begin
+      |      imem_rdata_reg = 32'h0;
       |    end
       |  end
-      |
-      |  assign imem_data = mem_rdata;
-      |
-      |  // 数据内存读取 (dmem)
-      |  wire [31:0] addr_offset_dmem = dmem_addr - 32'h80000000;
-      |  reg [31:0] lower_data, upper_data;
-      |
-      |  // 读取操作 (两次32位读取组合成64位)
+      |  
+      |  assign imem_data = imem_rdata_reg;
+      |  
+      |  // 数据内存读取 - 按原始地址读取，支持任意对齐
+      |  wire [31:0] dmem_addr_base = dmem_addr[31:0];
+      |  reg [31:0] dmem_data_low, dmem_data_high;
+      |  
       |  always @(*) begin
-      |    if (dmem_en) begin
-      |      mem_read(addr_offset_dmem, 4, lower_data);
-      |      mem_read(addr_offset_dmem + 4, 4, upper_data);
-      |      mem_rdata_64 = {upper_data, lower_data};
+      |    if (dmem_en && !dmem_wen) begin
+      |      // 直接从指定地址读取8字节
+      |      data_mem_read(dmem_addr_base, 4, dmem_data_low);
+      |      data_mem_read(dmem_addr_base + 4, 4, dmem_data_high);
+      |      dmem_rdata_reg = {dmem_data_high, dmem_data_low};
+      |    end else begin
+      |      dmem_rdata_reg = 64'h0;
       |    end
       |  end
-      |
-      |  assign dmem_rdata = mem_rdata_64;
-      |
-      |  // 写入操作
+      |  
+      |  assign dmem_rdata = dmem_rdata_reg;
+      |  
+      |  // 数据内存写入 - 严格按照地址和掩码写入
       |  always @(posedge clock) begin
       |    if (dmem_en && dmem_wen) begin
-      |      // 根据写掩码处理8字节写入 (分为低32位和高32位分别写入)
-      |      if (dmem_wmask[31:0] != 0)
-      |        mem_write(addr_offset_dmem, 4, dmem_wdata[31:0]);
-      |      if (dmem_wmask[63:32] != 0)
-      |        mem_write(addr_offset_dmem + 4, 4, dmem_wdata[63:32]);
+      |      // 分析写掩码，决定写入哪些字节
+      |      if (dmem_wmask[7:0] != 8'h0)     // 字节0
+      |        data_mem_write(dmem_addr_base, 1, dmem_wdata[7:0]);
+      |      if (dmem_wmask[15:8] != 8'h0)    // 字节1
+      |        data_mem_write(dmem_addr_base + 1, 1, dmem_wdata[15:8]);
+      |      if (dmem_wmask[23:16] != 8'h0)   // 字节2
+      |        data_mem_write(dmem_addr_base + 2, 1, dmem_wdata[23:16]);
+      |      if (dmem_wmask[31:24] != 8'h0)   // 字节3
+      |        data_mem_write(dmem_addr_base + 3, 1, dmem_wdata[31:24]);
+      |      if (dmem_wmask[39:32] != 8'h0)   // 字节4
+      |        data_mem_write(dmem_addr_base + 4, 1, dmem_wdata[39:32]);
+      |      if (dmem_wmask[47:40] != 8'h0)   // 字节5
+      |        data_mem_write(dmem_addr_base + 5, 1, dmem_wdata[47:40]);
+      |      if (dmem_wmask[55:48] != 8'h0)   // 字节6
+      |        data_mem_write(dmem_addr_base + 6, 1, dmem_wdata[55:48]);
+      |      if (dmem_wmask[63:56] != 8'h0)   // 字节7
+      |        data_mem_write(dmem_addr_base + 7, 1, dmem_wdata[63:56]);
       |    end
       |  end
       |
