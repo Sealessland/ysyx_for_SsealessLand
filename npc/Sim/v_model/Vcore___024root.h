@@ -22,6 +22,9 @@ class alignas(VL_CACHE_LINE_BYTES) Vcore___024root final : public VerilatedModul
         CData/*4:0*/ core__DOT___decode_io_rs1_addr;
         CData/*4:0*/ core__DOT___decode_io_rs2_addr;
         CData/*4:0*/ core__DOT___decode_io_rd_addr;
+        CData/*0:0*/ core__DOT__csr_write_en;
+        CData/*0:0*/ core__DOT____VdfgRegularize_h47660625_0_1;
+        CData/*0:0*/ core__DOT____VdfgRegularize_h47660625_0_2;
         CData/*6:0*/ core__DOT__decode__DOT___decodedBundle_andMatrixOutputs_T;
         CData/*7:0*/ core__DOT__decode__DOT___decodedBundle_andMatrixOutputs_T_1;
         CData/*7:0*/ core__DOT__decode__DOT___decodedBundle_andMatrixOutputs_T_4;
@@ -72,18 +75,24 @@ class alignas(VL_CACHE_LINE_BYTES) Vcore___024root final : public VerilatedModul
         CData/*6:0*/ core__DOT__decode__DOT____VdfgRegularize_h94ddb430_0_88;
         CData/*0:0*/ core__DOT__executer__DOT___GEN_28;
         CData/*0:0*/ core__DOT__executer__DOT___GEN_29;
+        CData/*0:0*/ core__DOT__executer__DOT___GEN_48;
         CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_2;
         CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_3;
         CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_11;
-        CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_14;
+        CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_15;
+    };
+    struct {
+        CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_17;
+        CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_18;
+        CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_19;
+        CData/*0:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_24;
         CData/*0:0*/ core__DOT__instfetch__DOT__pc_en;
         CData/*0:0*/ core__DOT__rf__DOT___GEN;
         CData/*5:0*/ __VdfgRegularize_hd87f99a1_0_2;
         CData/*0:0*/ __VstlFirstIteration;
-    };
-    struct {
         CData/*0:0*/ __Vtrigprevexpr___TOP__clock__0;
         CData/*0:0*/ __VactContinue;
+        SData/*11:0*/ core__DOT____VdfgRegularize_h47660625_0_0;
         SData/*9:0*/ core__DOT__decode__DOT___decodedBundle_andMatrixOutputs_T_9;
         SData/*8:0*/ core__DOT__decode__DOT___decodedBundle_andMatrixOutputs_T_12;
         SData/*14:0*/ core__DOT__decode__DOT___decodedBundle_andMatrixOutputs_T_19;
@@ -108,6 +117,12 @@ class alignas(VL_CACHE_LINE_BYTES) Vcore___024root final : public VerilatedModul
         VL_OUT(io_debugBranch,31,0);
         VL_OUT(io_debugImm,31,0);
         IData/*31:0*/ core__DOT___executer_io_out;
+        IData/*31:0*/ core__DOT___executer_io_csrW;
+        IData/*31:0*/ core__DOT__mstatus;
+        IData/*31:0*/ core__DOT__mtvec;
+        IData/*31:0*/ core__DOT__mepc;
+        IData/*31:0*/ core__DOT__mcause;
+        IData/*31:0*/ core__DOT____Vcellinp__executer__io_csrR;
         IData/*31:0*/ core__DOT____Vcellinp__control__io_rf_data;
         IData/*31:0*/ core__DOT__ram2r1w__DOT__mem__DOT__imem_rdata_reg;
         IData/*31:0*/ core__DOT__ram2r1w__DOT__mem__DOT__dmem_addr_base;
@@ -120,7 +135,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vcore___024root final : public VerilatedModul
         IData/*31:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_6;
         IData/*31:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_7;
         IData/*31:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_8;
-        IData/*31:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_17;
+        IData/*31:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_22;
         IData/*31:0*/ core__DOT__instfetch__DOT__pc;
         IData/*31:0*/ core__DOT__rf__DOT__rf_0;
         IData/*31:0*/ core__DOT__rf__DOT__rf_1;
@@ -131,6 +146,8 @@ class alignas(VL_CACHE_LINE_BYTES) Vcore___024root final : public VerilatedModul
         IData/*31:0*/ core__DOT__rf__DOT__rf_6;
         IData/*31:0*/ core__DOT__rf__DOT__rf_7;
         IData/*31:0*/ core__DOT__rf__DOT__rf_8;
+    };
+    struct {
         IData/*31:0*/ core__DOT__rf__DOT__rf_9;
         IData/*31:0*/ core__DOT__rf__DOT__rf_10;
         IData/*31:0*/ core__DOT__rf__DOT__rf_11;
@@ -146,8 +163,6 @@ class alignas(VL_CACHE_LINE_BYTES) Vcore___024root final : public VerilatedModul
         IData/*31:0*/ core__DOT__rf__DOT__rf_21;
         IData/*31:0*/ core__DOT__rf__DOT__rf_22;
         IData/*31:0*/ core__DOT__rf__DOT__rf_23;
-    };
-    struct {
         IData/*31:0*/ core__DOT__rf__DOT__rf_24;
         IData/*31:0*/ core__DOT__rf__DOT__rf_25;
         IData/*31:0*/ core__DOT__rf__DOT__rf_26;
@@ -164,7 +179,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vcore___024root final : public VerilatedModul
         IData/*31:0*/ __VactIterCount;
         QData/*63:0*/ core__DOT__ram2r1w__DOT__mem__DOT__dmem_rdata_reg;
         QData/*63:0*/ core__DOT__decode__DOT__casez_tmp;
-        QData/*63:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_13;
+        QData/*63:0*/ core__DOT__executer__DOT____VdfgRegularize_h3006ad77_0_16;
         VlUnpacked<CData/*0:0*/, 2> __Vm_traceActivity;
     };
     VlTriggerVec<1> __VstlTriggered;
