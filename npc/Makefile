@@ -6,6 +6,11 @@ PRJ = playground
 # 包含公共的 git_commit 函数
 -include ../Makefile
 
+filter:
+	@echo "Filtering comments from Verilog files..."
+	@find $(BUILD_DIR) -name "*.sv" -exec sed -i 's|//.*||' {} +
+	@echo "Filtering complete."
+
 test:
 	mill -i $(PRJ).test
 

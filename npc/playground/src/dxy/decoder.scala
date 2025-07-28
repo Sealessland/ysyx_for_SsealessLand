@@ -137,6 +137,7 @@ object pcEn extends BoolDecodeField[Insn] {
     case _ => n
   }
 }
+
 object JalrEn extends BoolDecodeField[Insn] {
   override def name: String = "jalr_en"
   override def genTable(i: Insn): BitPat = i.inst.name match {

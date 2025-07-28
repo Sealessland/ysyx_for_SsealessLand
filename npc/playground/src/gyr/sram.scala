@@ -17,7 +17,7 @@ class SRAMReq extends Bundle {
   val addr  = Output(UInt(32.W))
   val wdata = Output(UInt(32.W))
   val wen   = Output(Bool())      // true: 写操作, false: 读操作
-  val len   = Output(MemLen())    // 使用在 DPI-C.scala 中定义的 MemLen 枚举
+  val len   = Output(UInt(3.W))    // 使用在 DPI-C.scala 中定义的 MemLen 枚举
 }
 
 /**

@@ -1,4 +1,3 @@
-import dxy._
 import gyr._
 object Elaborate extends App {
   val firtoolOptions = Array(
@@ -12,9 +11,9 @@ object Elaborate extends App {
   )
 
   // 生成主要模块的Verilog代码
-  circt.stage.ChiselStage.emitSystemVerilogFile(new dxy.core(), args, firtoolOptions)
+  //circt.stage.ChiselStage.emitSystemVerilogFile(new core(), args, firtoolOptions)
   //circt.stage.ChiselStage.emitSystemVerilogFile(new test(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new BusConnExample, args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new core(), args, firtoolOptions)
 
   // 生成内存访问和测试模块的Verilog代码
 }
