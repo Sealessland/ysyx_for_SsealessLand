@@ -12,13 +12,24 @@ Vcore::Vcore(VerilatedContext* _vcontextp__, const char* _vcname__)
     , vlSymsp{new Vcore__Syms(contextp(), _vcname__, this)}
     , clock{vlSymsp->TOP.clock}
     , reset{vlSymsp->TOP.reset}
+    , io_inst_done{vlSymsp->TOP.io_inst_done}
+    , io_log_ready1{vlSymsp->TOP.io_log_ready1}
+    , io_log_ready2{vlSymsp->TOP.io_log_ready2}
+    , io_log_ready3{vlSymsp->TOP.io_log_ready3}
+    , io_log_ready4{vlSymsp->TOP.io_log_ready4}
+    , io_log_ready5{vlSymsp->TOP.io_log_ready5}
+    , io_Log_valid1{vlSymsp->TOP.io_Log_valid1}
+    , io_Log_valid2{vlSymsp->TOP.io_Log_valid2}
+    , io_Log_valid3{vlSymsp->TOP.io_Log_valid3}
+    , io_Log_valid4{vlSymsp->TOP.io_Log_valid4}
+    , io_Log_valid5{vlSymsp->TOP.io_Log_valid5}
     , io_debugPC{vlSymsp->TOP.io_debugPC}
     , io_debugInst{vlSymsp->TOP.io_debugInst}
-    , io_debugDNPC{vlSymsp->TOP.io_debugDNPC}
     , io_debugin1{vlSymsp->TOP.io_debugin1}
     , io_debugin2{vlSymsp->TOP.io_debugin2}
-    , io_debugBranch{vlSymsp->TOP.io_debugBranch}
-    , io_debugImm{vlSymsp->TOP.io_debugImm}
+    , io_debugout1{vlSymsp->TOP.io_debugout1}
+    , io_debugmemaddr{vlSymsp->TOP.io_debugmemaddr}
+    , io_debugmemdata{vlSymsp->TOP.io_debugmemdata}
     , rootp{&(vlSymsp->TOP)}
 {
     // Register model with the context
