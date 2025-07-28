@@ -7,7 +7,7 @@ import chisel3.util._
 // =============================================================================
 class ReadMemDPIC extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
-    // 修正: len 信号改为4位宽，以支持1/2/4/8字节的One-Hot编码
+    val clock = Input(Clock())
     val addr  = Input(UInt(32.W))
     val len   = Input(UInt(4.W))
     // 修正: rdata 输出改为64位宽，以支持双字(DWORD)读取
@@ -15,7 +15,7 @@ class ReadMemDPIC extends BlackBox with HasBlackBoxInline {
   })
 
   setInline("ReadMemDPIC.v",
-    s"""
+    """
        |// Verilog for ReadMemDPIC - Corrected
        |module ReadMemDPIC (
        |    input  [31:0] addr,
@@ -72,7 +72,6 @@ class ReadMemDPIC extends BlackBox with HasBlackBoxInline {
 class WriteMemDPIC extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
     val clock = Input(Clock())
-    // 修正: len 信号改为4位宽
     val addr  = Input(UInt(32.W))
     val len   = Input(UInt(4.W))
     val wdata = Input(UInt(64.W))
