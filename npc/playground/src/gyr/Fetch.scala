@@ -4,87 +4,115 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.experimental._
 import gyr.tool._
-class W2F extends Bundle{
-  val inst_done = Bool() // 用于指示指令是否有效
+
+class W2F extends Bundle {
+  val inst_done = Bool()
 }
 
-class F2D extends Bundle{
+class F2D extends Bundle {
   val inst = UInt(32.W)
   val pc   = UInt(32.W)
 }
-class FUBus extends Bundle{
-  val in  = Flipped(Decoupled(new W2F)) // 从 WriteBack 阶段接收指令完成信号
-  val out = Decoupled(new F2D)
-  val sram = Flipped(new SRAMport)
+
+class E2F extends Bundle {
+  val pcSrc = Bool()
+  val dnpc  = UInt(32.W)
 }
+
+class FUBus extends Bundle {
+  val in  = Flipped(new W2F)
+  val out = Decoupled(new F2D)
+  val axi = Flipped(new AXI4)
+  val e2f = Flipped(new E2F)
+}
+
+
+import chisel3._
+import chisel3.util._
+
+// 假设 FUBus, F2D, AXI4, E2F 等 Bundle 定义存在...
+
 class Fetch extends Module {
   val io = IO(new FUBus)
 
-  // 1. 为Fetch量身定做的状态机
-  val s_Idle :: s_Req_SRAM :: s_Wait_SRAM :: s_Send_Downstream :: Nil = Enum(4)
+  // --- AXI 写通道和应答通道，在此模块中未使用 ---
+  io.axi.w.valid      := false.B
+  io.axi.aw.valid     := false.B
+  io.axi.w.bits.data  := 0.U
+  io.axi.w.bits.strb  := 0.U
+  io.axi.aw.bits.addr := 0.U
+  io.axi.b.ready      := false.B // 写应答通道也应置为无效
+
+  // --- PC 更新逻辑 ---
+  val pc = RegInit("h80000000".U(32.W))
+  pc := Mux(io.e2f.pcSrc, io.e2f.dnpc, pc + 4.U)
+
+  // ====================== 修正部分 ======================
+
+  // 1. 用于暂存指令和PC的输出缓冲寄存器
+  val out_valid_reg = RegInit(false.B) // 缓冲中是否有有效数据
+  val out_pc_reg    = Reg(UInt(32.W))
+  val out_inst_reg  = Reg(UInt(32.W))
+
+  // 2. 将模块的输出端口直接连接到缓冲寄存器
+  io.out.valid     := out_valid_reg
+  io.out.bits.pc   := out_pc_reg
+  io.out.bits.inst := out_inst_reg
+
+  // 用于匹配AXI请求和响应的PC寄存器 (仍在飞行途中的PC)
+  val pc_reg = Reg(UInt(32.W))
+
+  // 3. 握手信号定义
+  // 定义何时可以取回新指令：当输出缓冲为空时
+  val can_fetch_new = !out_valid_reg
+
+  // AXI读数据通道的ready信号由缓冲状态决定
+  io.axi.r.ready := can_fetch_new
+
+  // AXI读地址请求使用当前的PC
+  io.axi.ar.bits.addr := pc
+
+  // 4. 状态机逻辑 (控制AXI事务)
+  val s_Idle :: s_Wait :: Nil = Enum(2)
   val state = RegInit(s_Idle)
 
-  val pc = RegInit("h7ffffffc".U(32.W))
-  val is_first_inst = RegInit(true.B)
+  // 默认AXI地址通道无效
+  io.axi.ar.valid := false.B
 
-  // 默认输出
-  io.in.ready := false.B
-  io.out.valid := false.B
-  io.out.bits := DontCare // or connect to a result register
-  io.sram.req.valid := false.B
-  io.sram.req.bits := DontCare
-  io.sram.resp.ready := false.B
-
-  // 保存SRAM返回的结果
-  val result_reg = Reg(new F2D)
-
+  // 核心状态机，仅在缓冲为空时才启动新的取指
   switch(state) {
     is(s_Idle) {
-      // 在空闲状态，等待“指令完成”信号
-      val can_start = io.in.valid || is_first_inst
-      io.in.ready := !is_first_inst // 只有非首条指令才需要实际的握手
-
-      when(can_start) {
-        state := s_Req_SRAM
+      when(can_fetch_new) {
+        io.axi.ar.valid := true.B
+        when(io.axi.ar.fire) { // 地址请求被AXI总线接受
+          pc_reg := pc         // 锁存当前PC，用于匹配返回的数据
+          state  := s_Wait
+        }
       }
     }
-
-    is(s_Req_SRAM) {
-      // 发起SRAM请求
-      io.sram.req.valid     := true.B
-      io.sram.req.bits.addr := pc + 4.U
-      io.sram.req.bits.len  := 4.U
-      io.sram.req.bits.wen  := false.B
-      // ... a.s.o
-
-      when(io.sram.req.fire) {
-        // 请求成功后，更新PC，并进入等待状态
-        pc := pc + 4.U
-        state := s_Wait_SRAM
-      }
-    }
-
-    is(s_Wait_SRAM) {
-      // 等待SRAM的响应
-      io.sram.resp.ready := true.B // 始终准备好接收响应
-      when(io.sram.resp.valid) {
-        // 收到响应，锁存结果，进入发送状态
-        result_reg.inst := io.sram.resp.bits.rdata
-        result_reg.pc   := pc // 此时的pc已经是更新后的pc，与指令地址一致
-        state := s_Send_Downstream
-      }
-    }
-
-    is(s_Send_Downstream) {
-      // 向下游发送数据
-      io.out.valid := true.B
-      io.out.bits  := result_reg
-
-      when(io.out.fire) {
-        // 发送成功后，返回空闲状态
-        when(is_first_inst) { is_first_inst := false.B } // 清除首次执行标志
+    is(s_Wait) {
+      // 在等待状态下，我们总是准备好接收数据
+      // 注意：r.ready 已经在外面根据 can_fetch_new 连接好了
+      when(io.axi.r.fire) { // AXI数据返回
         state := s_Idle
+        // 数据直接存入输出缓冲，此时不直接送往io.out
+        // out_valid_reg 会在下面统一处理
       }
     }
   }
+
+  // 5. 缓冲区的有效位控制逻辑
+  //    这是实现数据保持和正确处理背压的关键
+  when(io.axi.r.fire) {
+    // 当AXI数据到达时，数据有效，填满缓冲区
+    out_valid_reg := true.B
+    out_inst_reg  := io.axi.r.bits.data
+    out_pc_reg    := pc_reg // 使用之前锁存的PC，确保匹配
+  }.elsewhen(io.out.fire) {
+    // 当下游模块成功接收数据时，清空缓冲区
+    out_valid_reg := false.B
+  }
+  // 如果两个事件都未发生，out_valid_reg 保持其现有值
+
+  // ==================== 修正部分结束 ====================
 }

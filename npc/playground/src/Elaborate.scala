@@ -1,4 +1,6 @@
+
 import gyr._
+import te.{Decode, _}
 object Elaborate extends App {
   val firtoolOptions = Array(
     "--lowering-options=" + List(
@@ -11,9 +13,9 @@ object Elaborate extends App {
   )
 
   // 生成主要模块的Verilog代码
-  //circt.stage.ChiselStage.emitSystemVerilogFile(new core(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new core, args, firtoolOptions)
   //circt.stage.ChiselStage.emitSystemVerilogFile(new test(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new core(), args, firtoolOptions)
+ // circt.stage.ChiselStage.emitSystemVerilogFile(new Decode, args, firtoolOptions)
 
   // 生成内存访问和测试模块的Verilog代码
 }

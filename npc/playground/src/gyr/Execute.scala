@@ -6,9 +6,11 @@ class E2L extends Bundle{
   val rd_addr   = (UInt(5.W))
   val rd_data   = (UInt(32.W))
   val mem_wen   = (Bool())
+  val mem_ren   = (Bool()) // 明确的内存读使能
   val mem_addr = (UInt(32.W))
   val mem_wdata = (UInt(32.W))
-  val mem_len  = UInt(3.W)
+  val mem_len  = UInt(4.W)
+  val unsign_en = Bool()
 }
 class PCcontrol extends Bundle{
   val pcSel = Output(Bool())
@@ -69,11 +71,12 @@ class Execute extends Module{
   io.out.bits.rd_en      := io.in.bits.rd_en
   io.out.bits.rd_addr    := io.in.bits.rd_addr
   io.out.bits.rd_data    := rd_write_data // 使用正确选择的写回数据
-
+  io.out.bits.mem_ren    := io.in.bits.lsu_en ^ io.in.bits.mw_en // 明确的内存读使能
   io.out.bits.mem_wen    := io.in.bits.mw_en
   io.out.bits.mem_addr   := alu_out // 访存地址由ALU计算
   io.out.bits.mem_wdata  := io.in.bits.rs2_data
   io.out.bits.mem_len    := io.in.bits.mlen
+  io.out.bits.unsign_en  := io.in.bits.unsign_en
 
   // --- 5. 握手信号 ---
   // 假设这是单周期组合逻辑模块，直接透传握手信号

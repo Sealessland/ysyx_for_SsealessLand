@@ -165,16 +165,16 @@ object Opcode extends DecodeField[Insn,UInt]{
 object Mlen extends DecodeField[Insn, UInt] {
   override def name: String = "m_len"
 
-  override def chiselType: UInt = UInt(3.W)
+  override def chiselType: UInt = UInt(4.W)
 
   override def genTable(i: Insn): BitPat = i.inst.name match {
-    case "lb" | "lbu" => BitPat("b001") // 8 bits
-    case "lh" | "lhu" => BitPat("b010") // 16 bits
-    case "lw"         => BitPat("b100") // 32 bits
-    case "sb"         => BitPat("b001") // 8 bits
-    case "sh"         => BitPat("b010") // 16 bits
-    case "sw"         => BitPat("b100") // 32 bits
-    case _            => BitPat("b000") // Default to 32 bits for other instructions
+    case "lb" | "lbu" => BitPat("b0011") // 8 bits
+    case "lh" | "lhu" => BitPat("b0111") // 16 bits
+    case "lw"         => BitPat("b1111") // 32 bits
+    case "sb"         => BitPat("b0011") // 8 bits
+    case "sh"         => BitPat("b0111") // 16 bits
+    case "sw"         => BitPat("b1111") // 32 bits
+    case _            => BitPat("b0000") // Default to 32 bits for other instructions
   }
 }
 
@@ -321,7 +321,7 @@ class D2E extends Bundle{
   val csr_en    = Output(Bool())
   val lsu_en    = Output(Bool())
   val mw_en     = Output(Bool())
-  val mlen      = Output(UInt(3.W))
+  val mlen      = Output(UInt(4.W))
   val branch_en = Output(Bool())
   val jump_en   = Output(Bool())
   val jalr_en    = Output(Bool())
@@ -346,7 +346,7 @@ class Decode extends Module {
   val inst = io.in.bits.inst
 
   val instTable  = rvdecoderdb.instructions(os.pwd / "riscv-opcodes")
-  val targetSets = Set("rv_i", "rv64_i", "rv_m", "rv64_m")
+  val targetSets = Set("rv_i", "rv_m")
   // add implemented instructions here
   val instList = instTable
     .filter(instr => targetSets.contains(instr.instructionSet.name))
