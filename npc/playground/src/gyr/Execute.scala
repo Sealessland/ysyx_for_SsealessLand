@@ -31,7 +31,7 @@ class Execute extends Module{
 
   // JAL和Branch指令需要PC作为ALU的第一个输入来计算PC+imm
   // JALR和其他指令则使用rs1_data
-  val alu_in1 = Mux(io.in.bits.jump_en || io.in.bits.branch_en, io.in.bits.pc, io.in.bits.rs1_data)
+  val alu_in1 = Mux(io.in.bits.jump_en || io.in.bits.branch_en || io.in.bits.auipc_en, io.in.bits.pc, io.in.bits.rs1_data)
 
   // 第二个输入源保持不变：R/B/S型用rs2，I/J/U型用imm
   val alu_in2 = Mux(io.in.bits.rs2_en, io.in.bits.rs2_data, io.in.bits.imm)

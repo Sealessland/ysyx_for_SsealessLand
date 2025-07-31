@@ -13,16 +13,6 @@ Vcore::Vcore(VerilatedContext* _vcontextp__, const char* _vcname__)
     , clock{vlSymsp->TOP.clock}
     , reset{vlSymsp->TOP.reset}
     , io_inst_done{vlSymsp->TOP.io_inst_done}
-    , io_log_ready1{vlSymsp->TOP.io_log_ready1}
-    , io_log_ready2{vlSymsp->TOP.io_log_ready2}
-    , io_log_ready3{vlSymsp->TOP.io_log_ready3}
-    , io_log_ready4{vlSymsp->TOP.io_log_ready4}
-    , io_log_ready5{vlSymsp->TOP.io_log_ready5}
-    , io_Log_valid1{vlSymsp->TOP.io_Log_valid1}
-    , io_Log_valid2{vlSymsp->TOP.io_Log_valid2}
-    , io_Log_valid3{vlSymsp->TOP.io_Log_valid3}
-    , io_Log_valid4{vlSymsp->TOP.io_Log_valid4}
-    , io_Log_valid5{vlSymsp->TOP.io_Log_valid5}
     , io_debugPC{vlSymsp->TOP.io_debugPC}
     , io_debugInst{vlSymsp->TOP.io_debugInst}
     , io_debugin1{vlSymsp->TOP.io_debugin1}

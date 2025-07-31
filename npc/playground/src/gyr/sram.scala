@@ -60,7 +60,7 @@ class DPIread extends BlackBox with HasBlackBoxInline {
       |  // 使用独立的变量避免混合赋值
       |  reg [31:0] r_data_reg;
       |  reg [31:0] r_data_comb;
-      |
+      |   reg [2:0] delay;
       |  // 读响应总是OK
       |  assign r_resp = 2'b00;
       |  assign r_data = r_data_reg;
@@ -123,13 +123,12 @@ class DPIwrite extends BlackBox with HasBlackBoxInline {
       |    if (reset) begin
       |      done <= 1'b0;
       |    end else begin
-      |      // done信号是en信号延迟一个周期的结果。
-      |      // 这表示如果在周期N使能了写操作，则在周期N+1操作完成。
       |      done <= en;
       |
       |      // 仅在使能时调用mem_write
       |      if (en) begin
       |        mem_write(aw_addr, w_data);
+      |        done <= 1'b1; // 写操作完成
       |      end
       |    end
       |  end
@@ -140,6 +139,7 @@ class DPIwrite extends BlackBox with HasBlackBoxInline {
 // ===================================================================
 // 最优设计的 SRAM 模块 (纯粹核心逻辑)
 // ===================================================================
+
 class SRAM extends Module {
   val io = IO(new AXI4)
 
@@ -150,80 +150,95 @@ class SRAM extends Module {
   read_backend.io.reset := reset
   write_backend.io.clock := clock
   write_backend.io.reset := reset
+
+  // DPI 使能信号 (已修正)
   read_backend.io.en := io.ar.fire
-  write_backend.io.en := io.aw.fire && io.w.fire
+  // *** 关键修正 ***: 在地址和数据握手成功的下一个周期，触发后端写操作
+  write_backend.io.en := RegNext(io.aw.fire && io.w.fire, init = false.B)
+
   //----------------------------------------------------------------
-  // 读通道核心状态机 (2状态实现)
+  // 读通道核心状态机 (已增加延迟)
   //----------------------------------------------------------------
   val r_sIdle :: r_sResp :: Nil = Enum(2)
   val r_state = RegInit(r_sIdle)
 
+  // 后端信号
   val r_backend_done = read_backend.io.done
-
-  // 地址直接连接到后端
   read_backend.io.ar_addr := io.ar.bits.addr
+
+  // *** 新增延迟逻辑 ***: 用于增加一周期延迟的寄存器
+  val r_valid_reg = RegInit(false.B)
+  val r_bits_reg = Reg(new Rport)
 
   // 默认信号
   io.ar.ready := false.B
-  io.r.valid  := false.B
-  io.r.bits   := read_backend.io.r
+  io.r.valid  := r_valid_reg // 输出 valid 由延迟寄存器驱动
+  io.r.bits   := r_bits_reg  // 输出 bits 由延迟寄存器驱动
 
   switch(r_state) {
     is(r_sIdle) {
-      // 在空闲状态，永远准备好接收请求
       io.ar.ready := true.B
       when(io.ar.fire) {
-        // 请求被后端接受，立即进入响应状态等待
         r_state := r_sResp
       }
     }
     is(r_sResp) {
-      // 在响应状态，valid信号直接由后端的完成信号驱动
-      io.r.valid := r_backend_done
+      // 当后端完成时（周期T+1），我们不立即输出，而是将结果锁存到延迟寄存器中
+      when(r_backend_done) {
+        r_valid_reg := true.B
+        r_bits_reg  := read_backend.io.r
+      }
 
+      // 当延迟后的数据被主设备取走时（最早在周期T+2），才返回空闲状态
       when(io.r.fire) {
-        // 数据被主设备取走，返回空leisure状态
+        r_valid_reg := false.B // 清除 valid 标志
         r_state := r_sIdle
       }
     }
   }
 
   //----------------------------------------------------------------
-  // 写通道核心状态机
+  // 写通道核心状态机 (已增加延迟)
   //----------------------------------------------------------------
-  val aw_reg = Reg(new AWport)
-  val w_reg = Reg(new Wport)
   val w_sIdle :: w_sResp :: Nil = Enum(2)
   val w_state = RegInit(w_sIdle)
 
-  // 写操作的“完成”信号在写数据被接收后的下一个周期产生
-  val w_req_accepted = io.w.fire && w_state === w_sResp
+  // 后端信号
   val w_backend_done = write_backend.io.done
+  write_backend.io.aw_addr := RegNext(io.aw.bits.addr) // 地址和数据也需延迟一拍以匹配en信号
+  write_backend.io.w_data  := RegNext(io.w.bits.data)
+  write_backend.io.w_strb  := RegNext(io.w.bits.strb)
+
+  // *** 新增延迟逻辑 ***: 用于增加一周期延迟的寄存器
+  val b_valid_reg = RegInit(false.B)
+  val b_bits_reg = Reg(new Bport)
 
   // 默认信号
   io.aw.ready := false.B
   io.w.ready  := false.B
-  io.b.valid  := false.B
-  io.b.bits   := write_backend.io.b
-  write_backend.io.en := w_req_accepted
-  write_backend.io.aw_addr := aw_reg.addr
-  write_backend.io.w_data  := io.w.bits.data
-  write_backend.io.w_strb  := io.w.bits.strb
+  io.b.valid  := b_valid_reg // 输出 valid 由延迟寄存器驱动
+  io.b.bits   := b_bits_reg  // 输出 bits 由延迟寄存器驱动
 
   switch(w_state) {
     is(w_sIdle) {
+      // ** 行为简化 **: 假设 AW 和 W 通道总是一起到达
+      // 在一个更完备的AXI Slave中，aw和w应该可以被独立接收
       io.aw.ready := true.B
-      when(io.aw.fire&&io.w.fire) {
-        aw_reg  := io.aw.bits
-        w_reg   := io.w.bits
+      io.w.ready  := true.B
+      when(io.aw.fire && io.w.fire) {
         w_state := w_sResp
       }
     }
     is(w_sResp) {
-      // valid信号由后端的完成信号驱动
-      io.b.valid := w_backend_done
+      // 当后端写操作完成时（周期T+2），将响应锁存到延迟寄存器
+      when(w_backend_done) {
+        b_valid_reg := true.B
+        b_bits_reg  := write_backend.io.b
+      }
+
+      // 当延迟后的响应被主设备取走时（最早在周期T+3），返回空闲状态
       when(io.b.fire) {
-        // 写响应被接收，返回空闲状态
+        b_valid_reg := false.B
         w_state := w_sIdle
       }
     }

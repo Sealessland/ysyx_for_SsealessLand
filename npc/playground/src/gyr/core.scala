@@ -69,7 +69,7 @@ class core extends Module{
 
   IFU.io.in := WBU.io.w2f
 
-  
+
   // Connect Execute's PC control signals to Fetch
   IFU.io.e2f.pcSrc := EXU.io.pcCtrl.pcSel
   IFU.io.e2f.dnpc := EXU.io.pcCtrl.dnpc
@@ -83,7 +83,7 @@ class core extends Module{
   io.debugin1   := IDU.io.out.bits.rs1_data
   io.debugin2   := IDU.io.out.bits.rs2_data
   io.debugout1  := EXU.io.out.bits.rd_data
-  
+
   // 连接内存调试信号
   io.debugmemaddr := LSU.io.axi.ar.bits.addr // 使用读地址作为调试内存地址
   io.debugmemdata := LSU.io.axi.r.bits.data  // 使用读数据作为调试内存数据

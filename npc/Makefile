@@ -53,7 +53,7 @@ verilator-model: verilog
 	@echo "编译 Verilator 模型..."
 	@$(MAKE) -C $(SIM_DIR)/v_model -f Vcore.mk
 	@echo "Verilator 模型生成完成"
-
+	@$(MAKE) -C AdaptSim/
 # 构建仿真器
 build-sim: verilator-model
 	$(call git_commit, "build simulator")

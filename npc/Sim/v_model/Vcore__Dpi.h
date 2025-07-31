@@ -16,10 +16,10 @@ extern "C" {
 
 
     // DPI IMPORTS
-    // DPI import at build/core.sv:2250:31
-    extern int mem_read(int addr);
-    // DPI import at build/core.sv:2303:32
-    extern void mem_write(int addr, int data);
+    // DPI import at build/core.sv:2246:32
+    extern void mem_read(int ar_addr, int* r_data);
+    // DPI import at build/core.sv:2292:32
+    extern void mem_write(int aw_addr, int w_data);
 
 #ifdef __cplusplus
 }

@@ -5,7 +5,6 @@
 #include "Vcore___024root__DepSet_h134b5715__0.cpp"
 #include "Vcore__Dpi.cpp"
 #include "Vcore__Trace__0.cpp"
-#include "Vcore__ConstPool_0.cpp"
 #include "Vcore___024root__Slow.cpp"
 #include "Vcore___024root__DepSet_h0a3cae5e__0__Slow.cpp"
 #include "Vcore___024root__DepSet_h134b5715__0__Slow.cpp"

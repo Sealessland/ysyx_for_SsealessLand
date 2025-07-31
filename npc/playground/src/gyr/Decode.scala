@@ -158,6 +158,7 @@ object Opcode extends DecodeField[Insn,UInt]{
     case "sb"    => BitPat(AluFunc.add )
     case "sh"    => BitPat(AluFunc.add )
     case "sw"    => BitPat(AluFunc.add )
+    case "auipc" => BitPat(AluFunc.add)
     case _       => BitPat(AluFunc.NOP)
   }
 }
@@ -229,6 +230,14 @@ object IsJalr extends BoolDecodeField[Insn] {
 }
 }
 
+object IsAuipc extends BoolDecodeField[Insn] {
+  override def name: String = "auipc_en"
+
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "auipc" => y
+    case _       => n
+  }
+}
 //object IsJalr extends BoolDecodeField[Insn] {
 //  override def name: String = "jalr_en"
 //  override def genTable(i: Insn): BitPat = i.inst.name match {
@@ -325,7 +334,7 @@ class D2E extends Bundle{
   val branch_en = Output(Bool())
   val jump_en   = Output(Bool())
   val jalr_en    = Output(Bool())
-
+  val auipc_en   = Output(Bool())
 }
 class D2R extends Bundle{
   val rs1_addr = Output(UInt(5.W))
@@ -354,7 +363,7 @@ class Decode extends Module {
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr,IsAuipc))
   val decodedBundle = decodeTable.decode(inst)
 
   val imm_i: UInt = Cat(Fill(52, inst(31)), inst(31, 20))                              // I-type
@@ -392,6 +401,7 @@ class Decode extends Module {
   io.out.bits.mlen     := decodedBundle(Mlen)
   io.out.bits.branch_en := decodedBundle(BranchEn)
   io.out.bits.rs2_en    := decodedBundle(Rs2En)
+  io.out.bits.auipc_en  := decodedBundle(IsAuipc)
   io.out.bits.rs1_data  := io.r2d.rs1_data
   io.out.bits.rs2_data  := io.r2d.rs2_data
   io.out.bits.rd_addr   := inst(11, 7)
