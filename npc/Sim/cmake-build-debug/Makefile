@@ -67,8 +67,8 @@ CMAKE_BINARY_DIR = /home/sealessland/ysyx-workbench/npc/Sim/cmake-build-debug
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "No interactive CMake dialog available..."
-	/home/sealessland/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -130,19 +130,6 @@ main/fast:
 .PHONY : main/fast
 
 #=============================================================================
-# Target rules for targets named info
-
-# Build rule for target.
-info: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 info
-.PHONY : info
-
-# fast build rule for target.
-info/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/info.dir/build.make CMakeFiles/info.dir/build
-.PHONY : info/fast
-
-#=============================================================================
 # Target rules for targets named run
 
 # Build rule for target.
@@ -169,17 +156,17 @@ run_nodiff/fast:
 .PHONY : run_nodiff/fast
 
 #=============================================================================
-# Target rules for targets named clean_all
+# Target rules for targets named debug
 
 # Build rule for target.
-clean_all: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 clean_all
-.PHONY : clean_all
+debug: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 debug
+.PHONY : debug
 
 # fast build rule for target.
-clean_all/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/clean_all.dir/build.make CMakeFiles/clean_all.dir/build
-.PHONY : clean_all/fast
+debug/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/build
+.PHONY : debug/fast
 
 core-exe.o: core-exe.cpp.o
 .PHONY : core-exe.o
@@ -205,6 +192,30 @@ core-exe.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core-exe.cpp.s
 .PHONY : core-exe.cpp.s
 
+device.o: device.cpp.o
+.PHONY : device.o
+
+# target to build an object file
+device.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/device.cpp.o
+.PHONY : device.cpp.o
+
+device.i: device.cpp.i
+.PHONY : device.i
+
+# target to preprocess a source file
+device.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/device.cpp.i
+.PHONY : device.cpp.i
+
+device.s: device.cpp.s
+.PHONY : device.s
+
+# target to generate assembly for a file
+device.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/device.cpp.s
+.PHONY : device.cpp.s
+
 difftest.o: difftest.cpp.o
 .PHONY : difftest.o
 
@@ -228,6 +239,30 @@ difftest.s: difftest.cpp.s
 difftest.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/difftest.cpp.s
 .PHONY : difftest.cpp.s
+
+disasm.o: disasm.cpp.o
+.PHONY : disasm.o
+
+# target to build an object file
+disasm.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/disasm.cpp.o
+.PHONY : disasm.cpp.o
+
+disasm.i: disasm.cpp.i
+.PHONY : disasm.i
+
+# target to preprocess a source file
+disasm.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/disasm.cpp.i
+.PHONY : disasm.cpp.i
+
+disasm.s: disasm.cpp.s
+.PHONY : disasm.s
+
+# target to generate assembly for a file
+disasm.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/disasm.cpp.s
+.PHONY : disasm.cpp.s
 
 ebreak.o: ebreak.cpp.o
 .PHONY : ebreak.o
@@ -501,17 +536,22 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... clean_all"
-	@echo "... info"
+	@echo "... debug"
 	@echo "... run"
 	@echo "... run_nodiff"
 	@echo "... main"
 	@echo "... core-exe.o"
 	@echo "... core-exe.i"
 	@echo "... core-exe.s"
+	@echo "... device.o"
+	@echo "... device.i"
+	@echo "... device.s"
 	@echo "... difftest.o"
 	@echo "... difftest.i"
 	@echo "... difftest.s"
+	@echo "... disasm.o"
+	@echo "... disasm.i"
+	@echo "... disasm.s"
 	@echo "... ebreak.o"
 	@echo "... ebreak.i"
 	@echo "... ebreak.s"

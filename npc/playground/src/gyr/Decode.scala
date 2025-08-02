@@ -159,6 +159,10 @@ object Opcode extends DecodeField[Insn,UInt]{
     case "sh"    => BitPat(AluFunc.add )
     case "sw"    => BitPat(AluFunc.add )
     case "auipc" => BitPat(AluFunc.add)
+
+
+
+    case "lui"   => BitPat(AluFunc.add)
     case _       => BitPat(AluFunc.NOP)
   }
 }
@@ -169,11 +173,11 @@ object Mlen extends DecodeField[Insn, UInt] {
   override def chiselType: UInt = UInt(4.W)
 
   override def genTable(i: Insn): BitPat = i.inst.name match {
-    case "lb" | "lbu" => BitPat("b0011") // 8 bits
-    case "lh" | "lhu" => BitPat("b0111") // 16 bits
+    case "lb" | "lbu" => BitPat("b0001") // 8 bits
+    case "lh" | "lhu" => BitPat("b0011") // 16 bits
     case "lw"         => BitPat("b1111") // 32 bits
-    case "sb"         => BitPat("b0011") // 8 bits
-    case "sh"         => BitPat("b0111") // 16 bits
+    case "sb"         => BitPat("b0001") // 8 bits
+    case "sh"         => BitPat("b0011") // 16 bits
     case "sw"         => BitPat("b1111") // 32 bits
     case _            => BitPat("b0000") // Default to 32 bits for other instructions
   }
@@ -238,13 +242,14 @@ object IsAuipc extends BoolDecodeField[Insn] {
     case _       => n
   }
 }
-//object IsJalr extends BoolDecodeField[Insn] {
-//  override def name: String = "jalr_en"
-//  override def genTable(i: Insn): BitPat = i.inst.name match {
-//    case "jalr" => y
-//    case _ => n
-//  }
-//}
+object IsEbreak extends BoolDecodeField[Insn] {
+  override def name: String = "is_ebreak"
+
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "ebreak" => y
+    case _        => n
+  }
+}
 object LsuEn extends BoolDecodeField[Insn] {
   override def name: String = "lsu_en"
   override def genTable(i: Insn): BitPat = i.inst.name match {
@@ -307,7 +312,7 @@ object BranchEn extends BoolDecodeField[Insn]{
   override def name: String = "branch_en"
 
   override def genTable(i: Insn): BitPat = i.inst.name match {
-    case "beq" | "bne" | "blt" | "bge" | "bltu" | " bgeu" => y
+    case "beq" | "bne" | "blt" | "bge" | "bltu" | "bgeu" | "bbb" => y
     case _ => n
   }
 }
@@ -317,8 +322,8 @@ class LSMessage extends Bundle{
 }
 
 class D2E extends Bundle{
-  val rs1_data = UInt(32.W)
-  val rs2_data = UInt(32.W)
+  val rs1_data = Input(UInt(32.W))
+  val rs2_data = Input(UInt(32.W))
   val rd_addr  = Output(UInt(5.W))
   val rd_en    = Output(Bool())
   val opcode   = Output(UInt(5.W))
@@ -347,7 +352,7 @@ class DUBus extends Bundle {
   val out =Decoupled(new D2E)
   val d2r = new D2R
   val r2d = Flipped(new R2E)
-
+  val ebreakhandler = Output(Bool())
 }
 
 class Decode extends Module {
@@ -355,7 +360,9 @@ class Decode extends Module {
   val inst = io.in.bits.inst
 
   val instTable  = rvdecoderdb.instructions(os.pwd / "riscv-opcodes")
-  val targetSets = Set("rv_i", "rv_m")
+  val targetSets = Set("rv_i", "rv64_i", "rv_m", "rv64_m" ,"rv32_i")
+
+
   // add implemented instructions here
   val instList = instTable
     .filter(instr => targetSets.contains(instr.instructionSet.name))
@@ -363,7 +370,7 @@ class Decode extends Module {
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr,IsAuipc))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr,IsAuipc,IsEbreak))
   val decodedBundle = decodeTable.decode(inst)
 
   val imm_i: UInt = Cat(Fill(52, inst(31)), inst(31, 20))                              // I-type
@@ -384,14 +391,14 @@ class Decode extends Module {
       ImmTypeEnum.immU      -> imm_u,
       ImmTypeEnum.immJ      -> imm_j,
       ImmTypeEnum.immShamtD -> imm_shamtd,
-      ImmTypeEnum.immShamtW -> imm_shamtw
+      ImmTypeEnum.immShamtW -> imm_shamtw,
     )
   )
   io.d2r.rs1_en   := decodedBundle(Rs1En)
   io.d2r.rs2_en   := decodedBundle(Rs2En)
-  io.d2r.rs1_addr := inst(19, 15)
-  io.d2r.rs2_addr := inst(24, 20)
-
+  io.d2r.rs1_addr := Mux(decodedBundle(Rs1En),inst(19, 15),0.U)
+  io.d2r.rs2_addr := Mux(decodedBundle(Rs2En),inst(24, 20),0.U)
+  io.ebreakhandler:= decodedBundle(IsEbreak)
   io.out.bits.rd_en     := decodedBundle(RdEn)
   io.out.bits.jump_en   := decodedBundle(IsJal)
   io.out.bits.jalr_en    :=decodedBundle(IsJalr)

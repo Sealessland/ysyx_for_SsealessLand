@@ -18,7 +18,7 @@ verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
 	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
-	head -n -2 build/core.sv > build/core.sv.tmp && mv build/core.sv.tmp build/core.sv
+	head -n -3 build/core.sv > build/core.sv.tmp && mv build/core.sv.tmp build/core.sv
 
 help:
 	mill -i $(PRJ).runMain Elaborate --help

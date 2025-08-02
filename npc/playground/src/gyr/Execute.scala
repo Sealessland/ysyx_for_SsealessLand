@@ -31,11 +31,10 @@ class Execute extends Module{
 
   // JAL和Branch指令需要PC作为ALU的第一个输入来计算PC+imm
   // JALR和其他指令则使用rs1_data
-  val alu_in1 = Mux(io.in.bits.jump_en || io.in.bits.branch_en || io.in.bits.auipc_en, io.in.bits.pc, io.in.bits.rs1_data)
+  val alu_in1 = Mux(io.in.bits.jump_en || io.in.bits.auipc_en, io.in.bits.pc, io.in.bits.rs1_data)
 
   // 第二个输入源保持不变：R/B/S型用rs2，I/J/U型用imm
-  val alu_in2 = Mux(io.in.bits.rs2_en, io.in.bits.rs2_data, io.in.bits.imm)
-
+  val alu_in2 = Mux(io.in.bits.lsu_en && io.in.bits.mw_en, io.in.bits.imm, Mux(io.in.bits.rs2_en, io.in.bits.rs2_data, io.in.bits.imm))
   alu.io.opcode    := io.in.bits.opcode
   alu.io.in1       := alu_in1
   alu.io.in2       := alu_in2
@@ -45,7 +44,7 @@ class Execute extends Module{
 
   // --- 2. PC 控制逻辑 ---
   // 分支条件判断
-  val branch_taken = io.in.bits.branch_en && (alu_out =/= 0.U)
+  val branch_taken = io.in.bits.branch_en && (alu_out(0))
 
   // PC重定向条件：发生分支跳转、JAL或JALR
   val pc_redirect = branch_taken || io.in.bits.jump_en || io.in.bits.jalr_en
@@ -57,7 +56,13 @@ class Execute extends Module{
 
   // 根据是否是JALR来选择最终的跳转目标
   // JAL和Branch都使用 pc_plus_imm_target
-  io.pcCtrl.dnpc  := Mux(io.in.bits.jalr_en, reg_plus_imm_target, pc_plus_imm_target)
+  when(io.in.bits.jump_en || io.in.bits.branch_en) {
+    io.pcCtrl.dnpc := pc_plus_imm_target
+  }.otherwise {
+    // JALR使用 reg_plus_imm_target
+    io.pcCtrl.dnpc := Mux(io.in.bits.jalr_en, reg_plus_imm_target, pc_plus_imm_target)
+  }
+
 
   // --- 3. 写回逻辑 ---
   // JAL和JALR需要写回链接地址(PC+4)
@@ -69,7 +74,7 @@ class Execute extends Module{
   // --- 4. 连接到下一级流水线 (out) ---
   // (已移除您代码中的重复赋值)
   io.out.bits.rd_en      := io.in.bits.rd_en
-  io.out.bits.rd_addr    := io.in.bits.rd_addr
+  io.out.bits.rd_addr    := Mux(io.in.bits.rd_en,io.in.bits.rd_addr ,0.U)
   io.out.bits.rd_data    := rd_write_data // 使用正确选择的写回数据
   io.out.bits.mem_ren    := io.in.bits.lsu_en ^ io.in.bits.mw_en // 明确的内存读使能
   io.out.bits.mem_wen    := io.in.bits.mw_en

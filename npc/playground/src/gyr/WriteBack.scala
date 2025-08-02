@@ -20,8 +20,8 @@ class WriteBack extends Module {
   // --- 3. 输出到IFU的握手逻辑 ---
   // valid信号在输入有效时被置高
   // 将需要的信息传递给IFU
-  io.w2f.inst_done := io.in.valid && io.in.bits.rd_en
-
+  io.in.bits.ls_en
+  io.w2f.inst_done := RegNext(io.in.valid && io.out.en  && io.in.bits.ls_en, init = false.B)
   // --- 1. 输入端握手逻辑 (修正后) ---
   // WBU是否准备好接收新数据(io.in.ready)，
   // 取决于它是否能把当前数据的结果发送出去(io.w2f.ready)。

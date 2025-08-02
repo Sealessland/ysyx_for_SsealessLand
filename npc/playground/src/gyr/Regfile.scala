@@ -21,14 +21,14 @@ val io = IO(new Bundle {
  */
 class W2R extends Bundle {
   val addr = Output(UInt(5.W))
-  val data = Output(UInt(64.W))
+  val data = Output(UInt(32.W))
   val en   = Output(Bool())
 }
 
 
 class R2E extends Bundle{
-  val rs1_data = Output(UInt(64.W))
-  val rs2_data = Output(UInt(64.W))
+  val rs1_data = Output(UInt(32.W))
+  val rs2_data = Output(UInt(32.W))
 }
 /**
  * RegFile 的顶层 IO Bundle
@@ -47,16 +47,17 @@ class RegFile extends Module {
   val io = IO(new rfBundle)
 
   // 32个64位宽的寄存器
-  val rf = RegInit(VecInit(Seq.fill(32)(0.U(64.W))))
-
+  val rf = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
+  rf(0) := 0.U
   // 写逻辑：当写使能且目标地址不为x0时，写入数据
   when(io.w2r.en && (io.w2r.addr =/= 0.U)) {
     rf(io.w2r.addr) := io.w2r.data
   }
-
-  // 读逻辑：如果地址为x0，则读出0，否则读出寄存器值
   io.r2e.rs1_data := Mux((io.d2r.rs1_addr =/= 0.U), rf(io.d2r.rs1_addr), 0.U)
+
+
   io.r2e.rs2_data := Mux((io.d2r.rs2_addr =/= 0.U), rf(io.d2r.rs2_addr), 0.U)
+
 }
 
 

@@ -55,7 +55,7 @@ class DPIread extends BlackBox with HasBlackBoxInline {
       |  output reg    done
       |);
       |  // 导入C函数
-      |  import "DPI-C" function void mem_read(input int ar_addr, output int r_data);
+      |  import "DPI-C" function void memory_read(input int ar_addr, output int r_data);
       |
       |  // 使用独立的变量避免混合赋值
       |  reg [31:0] r_data_reg;
@@ -68,7 +68,7 @@ class DPIread extends BlackBox with HasBlackBoxInline {
       |  // 组合逻辑处理DPI调用
       |  always @(*) begin
       |    if (en) begin
-      |      mem_read(ar_addr, r_data_comb);
+      |      memory_read(ar_addr, r_data_comb);
       |    end else begin
       |      r_data_comb = 32'b0;
       |    end
@@ -113,7 +113,7 @@ class DPIwrite extends BlackBox with HasBlackBoxInline {
       |  output reg   done
       |);
       |  // 导入C函数
-      |  import "DPI-C" function void mem_write(input int aw_addr, input int w_data);
+      |  import "DPI-C" function void memory_write(input int aw_addr, input int w_data, input int w_strb);
       |
       |  // 写响应总是OK
       |  assign b_resp = 2'b00;
@@ -127,7 +127,7 @@ class DPIwrite extends BlackBox with HasBlackBoxInline {
       |
       |      // 仅在使能时调用mem_write
       |      if (en) begin
-      |        mem_write(aw_addr, w_data);
+      |        memory_write(aw_addr, w_data, w_strb);
       |        done <= 1'b1; // 写操作完成
       |      end
       |    end

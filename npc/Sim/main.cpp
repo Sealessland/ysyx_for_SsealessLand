@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
         sdb_mainloop();
     } else {
         // 直接运行
-        executor.run_insts(-1);
+        executor.run_insts(99999999);
     }
 
     // 清理差分测试资源

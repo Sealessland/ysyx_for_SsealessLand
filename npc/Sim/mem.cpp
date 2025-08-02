@@ -136,6 +136,71 @@ bool Memory::load_from_file(const std::string& filename, uint32_t offset) {
 void Memory::load_default_image(uint32_t offset) {
     // RISC-V MMIO测试程序
     const uint32_t default_program[] = {
+        0x00100093, // addi x1, x0, 1
+        0x00200113, // addi x2, x0, 2
+        0x00300193, // addi x3, x0, 3
+        0x00400213, // addi x4, x0, 4
+        0x00500293, // addi x5, x0, 5
+        0x00600313, // addi x6, x0, 6
+        0x00700393, // addi x7, x0, 7
+        0x00800413, // addi x8, x0, 8
+        0x00900493, // addi x9, x0, 9
+        0x00a00513, // addi x10, x0, 10
+        0x00b00593, // addi x11, x0, 11
+        0x00c00613, // addi x12, x0, 12
+        0x00d00693, // addi x13, x0, 13
+        0x00e00713, // addi x14, x0, 14
+        0x00f00793, // addi x15, x0, 15
+        0x01000813, // addi x16, x0, 16
+        0x01100893, // addi x17, x0, 17
+        0x01200913, // addi x18, x0, 18
+        0x01300993, // addi x19, x0, 19
+        0x01400a13, // addi x20, x0, 20
+        0x01500a93, // addi x21, x0, 21
+        0x01600b13, // addi x22, x0, 22
+        0x01700b93, // addi x23, x0, 23
+        0x01800c13, // addi x24, x0, 24
+        0x01900c93, // addi x25, x0, 25
+        0x01a00d13, // addi x26, x0, 26
+        0x01b00d93, // addi x27, x0, 27
+        0x01c00e13, // addi x28, x0, 28
+        0x01d00e93, // addi x29, x0, 29
+        0x01e00f13, // addi x30, x0, 30
+        0x01f00f93, // addi x31, x0, 31
+        0x00000297, // auipc x5, 0x0   // 第32条：x5 = pc + 0（假设此时pc为当前指令地址）
+        0x005283b3, // add x7, x5, x5  // 第33条：x7 = x5 + x5
+        0xfe9ff06f, // jal x0, -24
+        // 依次将1~31号寄存器填充为其序号
+        // 1. 准备要写入的数据
+        0xdeadb5b7, // lui a1, 0xdeadb      ; a1 = 0xdeadb000
+        0xeef58593, // addi a1, a1, -273    ; a1 = 0xdeadbeef (要写入的数据)
+
+        // 2. 准备目标内存地址
+        0x80000537, // lui a0, 0x80000      ; a0 = 0x80000000
+        0x00450513, // addi a0, a0, 4       ; a0 = 0x80000004 (目标地址)
+
+        // 3. 执行写操作
+        0x00b52223, // sw a1, 4(a0)         ; M[0x80000004] = a1
+
+        // 4. 执行读操作进行验证
+        0x00452603, // lw a2, 4(a0)         ; a2 = M[0x80000004], difftest会检查a2是否等于a1
+
+        0xdeadb5b7, // lui a1, 0xdeadb      ; a1 = 0xdeadb000
+   0xeef58593, // addi a1, a1, -273    ; a1 = 0xdeadbeef (要写入的数据)
+
+   // 2. 准备目标内存地址
+   0x80000537, // lui a0, 0x80000      ; a0 = 0x80000000
+   0x00450513, // addi a0, a0, 4       ; a0 = 0x80000004 (目标地址)
+
+   // 3. 执行写操作
+   0x00b52223, // sw a1, 4(a0)         ; M[0x80000004] = a1
+
+   // 4. 执行读操作进行验证
+   0x00452603, // lw a2, 4(a0)         ; a2 = M[0x80000004], difftest会检查a2是否等于a1
+
+   // 5. 无限循环结束
+
+
         // 初始化栈指针
         0x87fff137,  // lui sp, 0x87fff        # sp = 0x87fff000
         0xff010113,  // addi sp, sp, 0xff0     # sp = 0x87fff000 + 0xff0 = 0x87fffff0
@@ -237,4 +302,16 @@ extern "C" void data_mem_write(int addr, int len, int data)
     uint32_t physical_addr = static_cast<uint32_t>(addr);
     get_memory().write(physical_addr, static_cast<uint32_t>(len), static_cast<uint32_t>(data));
     std::cout << "数据内存write：addr=0x" << std::hex << addr << ", len=" << len << ", data=0x" << data << std::dec << std::endl;
+}
+
+// C-style interface for Verilator DPI-C
+extern "C" void memory_read(int addr, int* data) {
+    uint32_t read_val = get_memory().read(static_cast<uint32_t>(addr), 4);
+    std::cout << "mem_read: addr=0x" << std::hex << addr << ", data=0x" << read_val << std::dec << std::endl;
+    *data = read_val;
+}
+
+extern "C" void memory_write(int addr, int data ,int len) {
+    std::cout << "mem_write: addr=0x" << std::hex << addr << ", data=0x" << data << std::endl;
+    get_memory().write(static_cast<uint32_t>(addr), len, data);
 }

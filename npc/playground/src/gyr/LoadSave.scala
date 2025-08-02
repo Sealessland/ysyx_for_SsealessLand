@@ -12,6 +12,7 @@ class L2W extends Bundle{
   val rd_en     = Bool()
   val rd_addr   = UInt(5.W)
   val rd_data   = UInt(32.W)
+  val ls_en     = Bool() // Load/Store Enable
 }
 
 
@@ -53,16 +54,16 @@ class LoadSave extends Module {
 
   // 使用 switch 语句替换 MuxLookup
   switch(e2l_reg.mem_len) {
-    is("b000".U) { // Store Byte (SB)
-      strb  := "b0001".U << e2l_reg.mem_addr(1,0)
-      wdata := e2l_reg.mem_wdata(7,0) << (e2l_reg.mem_addr(1,0) << 3)
+    is("b0001".U) { // Store Byte (SB)
+      strb  := "b0001".U
+      wdata := e2l_reg.mem_wdata(7,0)
     }
-    is("b001".U) { // Store Half-word (SH)
-      strb  := "b0011".U << e2l_reg.mem_addr(1,0)
-      wdata := e2l_reg.mem_wdata(15,0) << (e2l_reg.mem_addr(1,0) << 3)
+    is("b0011".U) { // Store Half-word (SH)
+      strb  := "b0010".U
+      wdata := e2l_reg.mem_wdata(15,0)
     }
-    is("b010".U) { // Store Word (SW)
-      strb  := "b1111".U
+    is("b1111".U) { // Store Word (SW)
+      strb  := "b0100".U
       // wdata 使用默认值
     }
   }
@@ -79,7 +80,7 @@ class LoadSave extends Module {
 
   // 判断是否为非访存指令 (直通)
   val is_passthrough = io.in.valid && !io.in.bits.mem_ren && !io.in.bits.mem_wen
-
+  io.out.bits.ls_en := is_passthrough
   switch(state) {
     is(s_idle) {
       when(is_passthrough) {
@@ -137,7 +138,7 @@ class LoadSave extends Module {
 
         io.out.bits.rd_en   := e2l_reg.rd_en
         io.out.bits.rd_addr := e2l_reg.rd_addr
-        io.out.bits.rd_data := (final_data.asSInt >> (addr_offset << 3)).asUInt
+        io.out.bits.rd_data := final_data
 
         when(io.out.ready) {
           state := s_idle
