@@ -44,6 +44,7 @@ class core extends Module{
   val LSU= Module(new LoadSave)
   val WBU= Module(new WriteBack)
   val ebreak = Module(new ebreak)
+  val csr = Module(new CSR)
   ebreak.io.clock := clock
   ebreak.io.en := IDU.io.ebreakhandler
   // --- 流水线连接 ---
@@ -64,6 +65,8 @@ class core extends Module{
 
   rf.io.d2r <> IDU.io.d2r
   IDU.io.r2d <>  rf.io.r2e
+  csr.io.read <> IDU.io.csr
+  csr.io.write <> EXU.io.csr
   BusConn(EXU.io.out, LSU.io.in   )
   BusConn(LSU.io.out, WBU.io.in   )
   // The following connections are commented out because they use an older interface

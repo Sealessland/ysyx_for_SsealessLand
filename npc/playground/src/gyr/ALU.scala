@@ -32,7 +32,8 @@ class ALU extends Module {
   val logic_res = MuxLookup(io.opcode.asUInt, 0.U(32.W))(Seq(
     AluFunc.and.asUInt -> (io.in1 & io.in2),
     AluFunc.or.asUInt  -> (io.in1 | io.in2),
-    AluFunc.xor.asUInt -> (io.in1 ^ io.in2)
+    AluFunc.xor.asUInt -> (io.in1 ^ io.in2),
+    AluFunc.nand.asUInt -> (io.in1 & ~io.in2)
   )).asUInt
 
   // --- Group 4: Shifter Results (Combined into one signal) ---
@@ -68,6 +69,7 @@ class ALU extends Module {
     AluFunc.sra.asUInt -> shift_res,
     AluFunc.mul.asUInt -> mul_res,
     AluFunc.div.asUInt -> div_res,
-    AluFunc.rem.asUInt -> rem_res
+    AluFunc.rem.asUInt -> rem_res,
+    AluFunc.NOP.asUInt -> io.in1
   ))
 }
