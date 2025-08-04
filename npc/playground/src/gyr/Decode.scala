@@ -170,6 +170,7 @@ object Opcode extends DecodeField[Insn,UInt]{
 
 
 
+
     case "lui"   => BitPat(AluFunc.add)
     case _       => BitPat(AluFunc.NOP)
   }
@@ -306,6 +307,7 @@ object CsrEn extends BoolDecodeField[Insn] {
     case "csrrwi" => BitPat("b1")
     case "csrrsi" => BitPat("b1")
     case "csrrci" => BitPat("b1")
+    case "ecall"  => BitPat("b1")
     case _        => BitPat("b0")
   }
 }
@@ -335,7 +337,13 @@ object IsMret extends BoolDecodeField[Insn]{
     case _      => n
   }
 }
-
+object IsEcall extends BoolDecodeField[Insn]{
+  override def name: String = "is_ecall"
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "ecall" => y
+    case _       => n
+  }
+}
 class D2E extends Bundle{
   val rs1_data = Input(UInt(32.W))
   val rs2_data = Input(UInt(32.W))
@@ -347,6 +355,7 @@ class D2E extends Bundle{
   val rs2_en   = Output(Bool())
   val rs1_en   = Output(Bool())
   val mret_en  = Output(Bool())
+  val ecall_en = Output(Bool())
   // PC value for the instruction
   val unsign_en = Output(Bool())
   val csr_en    = Output(Bool())
@@ -390,8 +399,9 @@ class Decode extends Module {
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr,IsAuipc,IsEbreak,IsMret))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr,IsAuipc,IsEbreak,IsMret,IsEcall))
   val decodedBundle = decodeTable.decode(inst)
+  println(decodeTable, decodedBundle)
 
   val imm_i: UInt = Cat(Fill(52, inst(31)), inst(31, 20))                              // I-type
   val imm_s: UInt = Cat(Fill(52, inst(31)), inst(31, 25), inst(11, 7))                 // S-type
@@ -420,7 +430,7 @@ class Decode extends Module {
   io.d2r.rs2_en   := decodedBundle(Rs2En)
   io.d2r.rs1_addr := Mux(decodedBundle(Rs1En),inst(19, 15),0.U)
   io.d2r.rs2_addr := Mux(decodedBundle(Rs2En),inst(24, 20),0.U)
-  io.csr.csrAddr  := Mux(decodedBundle(CsrEn),inst(31, 20),0.U)
+  io.csr.csrAddr  := Mux(decodedBundle(CsrEn),inst(31, 20),Mux(decodedBundle(IsEcall),0x305.U,0.U(12.W)))
 
 
   io.ebreakhandler:= decodedBundle(IsEbreak)
@@ -440,10 +450,13 @@ class Decode extends Module {
   io.out.bits.rd_addr   := inst(11, 7)
   io.out.bits.csr_en    := decodedBundle(CsrEn)
   io.out.bits.mret_en   := decodedBundle(IsMret)
+  io.out.bits.ecall_en  := decodedBundle(IsEcall)
   io.out.bits.csr_data  := io.csr.csrData
-  io.out.bits.csr_addr  :=  Mux(decodedBundle(IsMret),0x341.U(12.W),io.csr.csrAddr)
+  io.out.bits.csr_addr  :=  Mux(decodedBundle(IsMret),0x341.U(12.W),Mux(decodedBundle(CsrEn),inst(31, 20),0.U))
   io.out.bits.pc         := io.in.bits.pc // Pass the PC value from F2D to D2E
-
+  when(decodedBundle(IsEcall)){
+    io.csr.csrAddr := 0x305.U // Set CSR address for ecall
+  }
   io.in.ready := io.out.ready
   io.out.valid:=io.in.valid
   println(decodeTable, decodedBundle)

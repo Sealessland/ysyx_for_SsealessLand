@@ -14,6 +14,7 @@ Vcore::Vcore(VerilatedContext* _vcontextp__, const char* _vcname__)
     , reset{vlSymsp->TOP.reset}
     , io_inst_done{vlSymsp->TOP.io_inst_done}
     , io_ls_done{vlSymsp->TOP.io_ls_done}
+    , io_ecall{vlSymsp->TOP.io_ecall}
     , io_debugPC{vlSymsp->TOP.io_debugPC}
     , io_debugInst{vlSymsp->TOP.io_debugInst}
     , io_debugin1{vlSymsp->TOP.io_debugin1}
@@ -23,6 +24,7 @@ Vcore::Vcore(VerilatedContext* _vcontextp__, const char* _vcname__)
     , io_debugmemdata{vlSymsp->TOP.io_debugmemdata}
     , io_debugwaddr{vlSymsp->TOP.io_debugwaddr}
     , io_debugwdata{vlSymsp->TOP.io_debugwdata}
+    , io_debugImm{vlSymsp->TOP.io_debugImm}
     , rootp{&(vlSymsp->TOP)}
 {
     // Register model with the context

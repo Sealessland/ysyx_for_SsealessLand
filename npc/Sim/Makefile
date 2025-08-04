@@ -6,9 +6,9 @@ BUILD_DIR = build
 -include ../../Makefile
 
 # 条件编译选项
-DIFFTEST ?= 1  # 默认启用差分测试
-MTRACE ?= 1    # 默认禁用内存跟踪
-ITRACE ?= 1    # 默认禁用指令跟踪
+#DIFFTEST ?= 0  # 默认启用差分测试
+#MTRACE ?= 0    # 默认禁用内存跟踪
+#ITRACE ?= 0    # 默认禁用指令跟踪
 
 # 初始化基础CPPFLAGS
 CPPFLAGS = -I$(VERILATOR_ROOT)/include \
@@ -18,12 +18,10 @@ CPPFLAGS = -I$(VERILATOR_ROOT)/include \
            -I./v_model/
 
 # 添加预处理器宏定义（这个部分有问题需要修复）
-CFLAGS = -DDIFFTEST
 
 CFLAGS +=
 
 
-CFLAGS += -DITRACE
 
 # 合并CFLAGS到CPPFLAGS
 CPPFLAGS += $(CFLAGS)
@@ -59,10 +57,10 @@ $(BUILD_DIR)/%.o: %.cpp
 
 run: main
 	$(call git_commit, "run npc sim") # DO NOT REMOVE THIS LINE!!
-	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff /home/sealessland/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so   -m TestBin/div-riscv32e-npc.bin
+	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff /home/sealessland/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so   -m /home/sealessland/ysyx-workbench/npc/Sim/a/rtthread-riscv32-nemu.bin
 run_nodiff: main
 	$(call git_commit, "run npc sim without difftest") # DO NOT REMOVE THIS LINE!!
-	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main
+	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main -m /home/sealessland/ysyx-workbench/npc/Sim/a/rtthread-riscv32e-npc.bin
 
 clean:
 	rm -f main

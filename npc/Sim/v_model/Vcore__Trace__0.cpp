@@ -33,7 +33,7 @@ void Vcore___024root__trace_chg_0_sub_0(Vcore___024root* vlSelf, VerilatedVcd::B
         bufp->chgIData(oldp+6,(vlSelfRef.core__DOT__EXU__DOT___alu_io_out),32);
         bufp->chgCData(oldp+7,(((0xcU & ((- (IData)(
                                                     (0x1ffU 
-                                                     == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_37)))) 
+                                                     == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_38)))) 
                                          << 2U)) | 
                                 ((2U & (((IData)((0x1003U 
                                                   == 
@@ -44,26 +44,15 @@ void Vcore___024root__trace_chg_0_sub_0(Vcore___024root* vlSelf, VerilatedVcd::B
                                                       == 
                                                       (0x5fU 
                                                        & vlSelfRef.core__DOT__IFU__DOT__inst_buf_bits_inst)) 
-                                                     & (IData)(vlSelfRef.core__DOT__IDU__DOT____VdfgRegularize_h94ddb430_0_50))) 
+                                                     & (IData)(vlSelfRef.core__DOT__IDU__DOT____VdfgRegularize_h94ddb430_0_52))) 
                                             | (0x1ffU 
-                                               == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_37)))) 
+                                               == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_38)))) 
                                         << 1U)) | (IData)(vlSelfRef.core__DOT___IDU_io_out_bits_lsu_en)))),4);
         bufp->chgBit(oldp+8,(vlSelfRef.core__DOT___EXU_io_out_bits_unsign_en));
         bufp->chgBit(oldp+9,(vlSelfRef.core__DOT___EXU_io_pcCtrl_pcSel));
-        bufp->chgIData(oldp+10,(((0xfffffffU == vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_71)
-                                  ? vlSelfRef.core__DOT__EXU__DOT__csr_temp
-                                  : ((1U & ((0x7fU 
-                                             == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_24)) 
-                                            | ((~ (IData)(
-                                                          (0x3ffU 
-                                                           == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_23)))) 
-                                               | (IData)(vlSelfRef.core__DOT___IDU_io_out_bits_branch_en))))
-                                      ? (vlSelfRef.core__DOT__IFU__DOT__inst_buf_bits_pc 
-                                         + (IData)(vlSelfRef.core__DOT___IDU_io_out_bits_imm))
-                                      : vlSelfRef.core__DOT__EXU__DOT___alu_io_out))),32);
-        bufp->chgCData(oldp+11,((0x1fU & (vlSelfRef.core__DOT__IFU__DOT__inst_buf_bits_inst 
+        bufp->chgCData(oldp+10,((0x1fU & (vlSelfRef.core__DOT__IFU__DOT__inst_buf_bits_inst 
                                           >> 7U))),5);
-        bufp->chgBit(oldp+12,(((0x7fU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T)) 
+        bufp->chgBit(oldp+11,(((0x7fU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T)) 
                                | ((0xffU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_1)) 
                                   | ((0xffU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_3)) 
                                      | ((0x3ffU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_7)) 
@@ -82,38 +71,41 @@ void Vcore___024root__trace_chg_0_sub_0(Vcore___024root* vlSelf, VerilatedVcd::B
                                                           | ((0x7fU 
                                                               == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_24)) 
                                                              | ((0x3fffU 
-                                                                 == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_27)) 
+                                                                 == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_28)) 
                                                                 | ((0x7fffU 
-                                                                    == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_30)) 
+                                                                    == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_31)) 
                                                                    | ((0xffU 
-                                                                       == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_36)) 
+                                                                       == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_37)) 
                                                                       | ((0xffU 
-                                                                          == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_38)) 
+                                                                          == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_39)) 
                                                                          | ((0xffU 
-                                                                             == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_44)) 
+                                                                             == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_45)) 
                                                                             | ((0x7fffU 
-                                                                                == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_58)) 
-                                                                               | ((0x7fffU 
                                                                                 == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_59)) 
+                                                                               | ((0x7fffU 
+                                                                                == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_60)) 
                                                                                 | ((0x7fffU 
-                                                                                == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_61)) 
+                                                                                == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_62)) 
                                                                                 | (0x3fffU 
-                                                                                == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_69)))))))))))))))))))))));
-        bufp->chgCData(oldp+13,(vlSelfRef.core__DOT___IDU_io_out_bits_opcode),5);
-        bufp->chgQData(oldp+14,(vlSelfRef.core__DOT___IDU_io_out_bits_imm),64);
-        bufp->chgIData(oldp+16,(vlSelfRef.core__DOT__IFU__DOT__inst_buf_bits_pc),32);
-        bufp->chgBit(oldp+17,((0U != (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_orMatrixOutputs_T_19))));
-        bufp->chgBit(oldp+18,((0U != vlSelfRef.core__DOT__IDU__DOT___decodedBundle_orMatrixOutputs_T_17)));
-        bufp->chgBit(oldp+19,((0xfffffffU == vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_71)));
-        bufp->chgBit(oldp+20,((0U != (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_orMatrixOutputs_T_24))));
-        bufp->chgIData(oldp+21,(vlSelfRef.core__DOT___csr_io_read_csrData),32);
-        bufp->chgSData(oldp+22,(vlSelfRef.core__DOT___EXU_io_csr_addr),12);
-        bufp->chgBit(oldp+23,(vlSelfRef.core__DOT___IDU_io_out_bits_lsu_en));
-        bufp->chgBit(oldp+24,(vlSelfRef.core__DOT___IDU_io_out_bits_branch_en));
-        bufp->chgBit(oldp+25,((0x7fU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_24))));
-        bufp->chgBit(oldp+26,((0x3ffU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_23))));
-        bufp->chgBit(oldp+27,((IData)((0x17U == (0x7fU 
+                                                                                == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_70)))))))))))))))))))))));
+        bufp->chgCData(oldp+12,(vlSelfRef.core__DOT___IDU_io_out_bits_opcode),5);
+        bufp->chgIData(oldp+13,(vlSelfRef.core__DOT__IFU__DOT__inst_buf_bits_pc),32);
+        bufp->chgBit(oldp+14,((0U != (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_orMatrixOutputs_T_19))));
+        bufp->chgBit(oldp+15,((0U != vlSelfRef.core__DOT__IDU__DOT___decodedBundle_orMatrixOutputs_T_17)));
+        bufp->chgBit(oldp+16,((0xfffffffU == vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_72)));
+        bufp->chgBit(oldp+17,((0U != (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_orMatrixOutputs_T_24))));
+        bufp->chgIData(oldp+18,(vlSelfRef.core__DOT___csr_io_read_csrData),32);
+        bufp->chgSData(oldp+19,(((0xfffffffU == vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_72)
+                                  ? 0x341U : (IData)(vlSelfRef.core__DOT__IDU__DOT____VdfgRegularize_h94ddb430_0_96))),12);
+        bufp->chgBit(oldp+20,(vlSelfRef.core__DOT___IDU_io_out_bits_lsu_en));
+        bufp->chgBit(oldp+21,(vlSelfRef.core__DOT___IDU_io_out_bits_branch_en));
+        bufp->chgBit(oldp+22,((0x7fU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_24))));
+        bufp->chgBit(oldp+23,((0x3ffU == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_23))));
+        bufp->chgBit(oldp+24,((IData)((0x17U == (0x7fU 
                                                  & vlSelfRef.core__DOT__IFU__DOT__inst_buf_bits_inst)))));
+        bufp->chgSData(oldp+25,(vlSelfRef.core__DOT___EXU_io_csr_addr),12);
+        bufp->chgIData(oldp+26,(vlSelfRef.core__DOT___EXU_io_csr_data),32);
+        bufp->chgBit(oldp+27,(vlSelfRef.core__DOT___EXU_io_csr_wen));
         bufp->chgIData(oldp+28,(vlSelfRef.core__DOT__EXU__DOT__csr_temp),32);
         bufp->chgIData(oldp+29,(vlSelfRef.core__DOT__EXU__DOT____Vcellinp__alu__io_in1),32);
         bufp->chgIData(oldp+30,(vlSelfRef.core__DOT__EXU__DOT____Vcellinp__alu__io_in2),32);
@@ -232,13 +224,28 @@ void Vcore___024root__trace_chg_0_sub_0(Vcore___024root* vlSelf, VerilatedVcd::B
     bufp->chgIData(oldp+133,(vlSelfRef.io_debugInst),32);
     bufp->chgIData(oldp+134,(vlSelfRef.io_debugin1),32);
     bufp->chgIData(oldp+135,(vlSelfRef.io_debugin2),32);
-    bufp->chgIData(oldp+136,(vlSelfRef.io_debugout1),32);
-    bufp->chgIData(oldp+137,(vlSelfRef.io_debugmemaddr),32);
-    bufp->chgIData(oldp+138,(vlSelfRef.io_debugmemdata),32);
-    bufp->chgIData(oldp+139,(vlSelfRef.io_debugwaddr),32);
-    bufp->chgIData(oldp+140,(vlSelfRef.io_debugwdata),32);
-    bufp->chgBit(oldp+141,(vlSelfRef.io_inst_done));
-    bufp->chgBit(oldp+142,(vlSelfRef.io_ls_done));
+    bufp->chgQData(oldp+136,(vlSelfRef.io_debugImm),64);
+    bufp->chgIData(oldp+138,(vlSelfRef.io_debugout1),32);
+    bufp->chgIData(oldp+139,(vlSelfRef.io_debugmemaddr),32);
+    bufp->chgIData(oldp+140,(vlSelfRef.io_debugmemdata),32);
+    bufp->chgIData(oldp+141,(vlSelfRef.io_debugwaddr),32);
+    bufp->chgIData(oldp+142,(vlSelfRef.io_debugwdata),32);
+    bufp->chgBit(oldp+143,(vlSelfRef.io_inst_done));
+    bufp->chgBit(oldp+144,(vlSelfRef.io_ls_done));
+    bufp->chgBit(oldp+145,(vlSelfRef.io_ecall));
+    bufp->chgIData(oldp+146,(((IData)(vlSelfRef.io_ecall)
+                               ? vlSelfRef.core__DOT___csr_io_read_csrData
+                               : ((0xfffffffU == vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_72)
+                                   ? vlSelfRef.core__DOT__EXU__DOT__csr_temp
+                                   : ((1U & ((0x7fU 
+                                              == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_24)) 
+                                             | ((~ (IData)(
+                                                           (0x3ffU 
+                                                            == (IData)(vlSelfRef.core__DOT__IDU__DOT___decodedBundle_andMatrixOutputs_T_23)))) 
+                                                | (IData)(vlSelfRef.core__DOT___IDU_io_out_bits_branch_en))))
+                                       ? (vlSelfRef.core__DOT__IFU__DOT__inst_buf_bits_pc 
+                                          + (IData)(vlSelfRef.io_debugImm))
+                                       : vlSelfRef.core__DOT__EXU__DOT___alu_io_out)))),32);
 }
 
 void Vcore___024root__trace_cleanup(void* voidSelf, VerilatedVcd* /*unused*/) {

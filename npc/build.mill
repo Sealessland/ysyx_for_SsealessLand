@@ -13,9 +13,18 @@ import mill.bsp._
 
 object v {
   val scala = "2.13.15"
-  val chiselVersion = "6.6.0"
+  val chiselVersion = "7.0.0-M2"
 }
-
+object ysyxSoC extends ScalaModule{
+  override def scalaVersion = v.scala
+  override def millSourcePath = super.millSourcePath / "ysyxSoC"
+  override def sources = T.sources {
+    super.sources() ++ Seq(
+      PathRef(millSourcePath / "src"),
+      PathRef(millSourcePath / "jvm" / "src")
+    )
+  }
+}
 // 定义rvdecoderdb模块
 object rvdecoderdb extends ScalaModule {
   override def scalaVersion = v.scala

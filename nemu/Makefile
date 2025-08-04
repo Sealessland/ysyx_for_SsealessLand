@@ -62,3 +62,10 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+
+
+
+TEMP_NEMUFLAGS += -l a/nemu-log.txt 
+
+rtt:
+	$(MAKE) -C $(NEMU_HOME) ISA=$(ISA) run ARGS="$(TEMP_NEMUFLAGS)" IMG=/home/sealessland/ysyx-workbench/nemu/a/rtthread-riscv32e-npc.bin

@@ -28,7 +28,6 @@
 #define ANSI_FG_WHITE   "\33[1;37m"
 #define ANSI_RESET      "\33[0m"
 #define ANSI_BOLD       "\33[1m"
-#define ITRACE 1
 
 
 

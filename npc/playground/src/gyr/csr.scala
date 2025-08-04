@@ -38,7 +38,8 @@ class CSR extends Module {
   val mtvec   = RegInit(0.U(32.W))
   val mepc    = RegInit(0.U(32.W))
   val mcause  = RegInit(0.U(32.W))
-
+  mcause := 0xb.U
+  mstatus := 0x1800.U // MIE = 1, MPIE = 1, MPP = 0b11 (Machine mode)
   // 修改点 3: 写操作逻辑现在使用 io.write 接口
   when(io.write.wen) {
     switch(io.write.addr) {
@@ -56,4 +57,5 @@ class CSR extends Module {
     MEPC    -> mepc,
     MCAUSE  -> mcause
   ))
+
 }

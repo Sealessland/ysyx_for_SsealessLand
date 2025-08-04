@@ -25,6 +25,7 @@ class core extends Module{
     val debugInst = Output(UInt(32.W)) // 用于调试的指令输出
     val debugin1  =Output(UInt(32.W)) // 用于调试的输入信号1
     val debugin2  =Output(UInt(32.W)) // 用于调试的输入信号2
+    val debugImm  =Output(UInt(64.W)) // 用于调试的立即数输出
     val debugout1 = Output(UInt(32.W)) // 用于调试的输出信号1
     val debugmemaddr = Output(UInt(32.W)) // 用于调试的内存地址
     val debugmemdata = Output(UInt(32.W)) // 用于调试的内存数据
@@ -32,6 +33,7 @@ class core extends Module{
     val debugwdata = Output(UInt(32.W)) // 用于调试的写
     val inst_done = Output(Bool()) // 用于指示指令是否完成
     val ls_done    =Output(Bool()) // 用于指示PC选择信号
+    val ecall = Output(Bool())
 
   })
  // val commit = Module(new CommitDPI)
@@ -91,6 +93,7 @@ class core extends Module{
   // 从执行单元 (EXU) 获取 ALU 的输入和输出
   io.debugin1   := IDU.io.out.bits.rs1_data
   io.debugin2   := IDU.io.out.bits.rs2_data
+  io.debugImm   := IDU.io.out.bits.imm // 添加立即数调试输出
   io.debugout1  := EXU.io.out.bits.rd_data
 
   // 连接内存调试信号
@@ -105,5 +108,5 @@ class core extends Module{
   io.debugmemdata := LSU.io.axi.r.bits.data  // 使用读数据作为
   io.debugwaddr:= LSU.io.axi.aw.bits.addr // 使用写地址作为调试写地址
   io.debugwdata:= LSU.io.axi.w.bits.data  // 使用写数据作为调试写数据
-
+  io.ecall := IDU.io.out.bits.ecall_en
 }

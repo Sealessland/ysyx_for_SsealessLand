@@ -29,12 +29,12 @@ paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
-  Log("paddr_read: addr = " FMT_PADDR ", len = %d, data = " FMT_WORD, addr, len, ret);
+//  Log("paddr_read: addr = " FMT_PADDR ", len = %d, data = " FMT_WORD, addr, len, ret);
   return ret;
 }
 
 static void pmem_write(paddr_t addr, int len, word_t data) {
-  Log("paddr_write: addr = " FMT_PADDR ", len = %d, data = 0x%x", addr, len, data);
+  //Log("paddr_write: addr = " FMT_PADDR ", len = %d, data = 0x%x", addr, len, data);
   
   host_write(guest_to_host(addr), len, data);
 }

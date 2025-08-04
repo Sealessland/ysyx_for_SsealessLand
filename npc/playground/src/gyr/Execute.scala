@@ -102,6 +102,13 @@ when(io.in.bits.mret_en){
   io.csr.addr := io.in.bits.csr_addr // CSR写地址
   io.csr.data := alu_out
   io.csr.wen := io.in.bits.csr_en
+  when(io.in.bits.ecall_en){
+    io.pcCtrl.pcSel := true.B
+    io.pcCtrl.dnpc := io.in.bits.csr_data
+    io.csr.wen :=true.B
+    io.csr.addr := 0x341.U
+    io.csr.data := io.in.bits.pc
+  }
   // --- 5. 握手信号 ---
   // 假设这是单周期组合逻辑模块，直接透传握手信号
   io.out.valid := io.in.valid
