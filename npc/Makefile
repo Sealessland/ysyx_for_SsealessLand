@@ -145,3 +145,24 @@ tor: verilator-model
 		verilator-model build-sim sim sim-nodiff debug-sim \
 		sim-info sim-help rebuild-sim rebuild-sim-only help-all tor
 
+# Find all peripheral Verilog files
+PERIP_V_FILES = $(shell find ysyxSoC/perip -name "*.v")
+
+
+
+soc:
+	$(call git_commit, "gen verilator model for SoC")
+	@echo "生成 Verilator 模型..."
+	@mkdir -p $(SIM_DIR)/SoC_model
+	@verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal \
+		--top-module ysyxSoCFull \
+		+incdir+ysyxSoC/perip/uart16550/rtl \
+		+incdir+ysyxSoC/perip/spi/rtl \
+		ysyxSoC/build/ysyxSoCFull.v \
+		$(BUILD_DIR)/ysyx_23060321.sv \
+		$(PERIP_V_FILES) \
+		--Mdir $(SIM_DIR)/SoC_model \
+		--timescale "1ns/1ns" --no-timing
+	@echo "编译 Verilator 模型..."
+	@$(MAKE) -C $(SIM_DIR)/SoC_model -f VysyxSoCFull.mk
+	@echo "Verilator 模型生成完成"

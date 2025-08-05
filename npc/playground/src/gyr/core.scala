@@ -25,7 +25,6 @@ class core extends Module{
     val debugInst = Output(UInt(32.W)) // 用于调试的指令输出
     val debugin1  =Output(UInt(32.W)) // 用于调试的输入信号1
     val debugin2  =Output(UInt(32.W)) // 用于调试的输入信号2
-    val debugImm  =Output(UInt(64.W)) // 用于调试的立即数输出
     val debugout1 = Output(UInt(32.W)) // 用于调试的输出信号1
     val debugmemaddr = Output(UInt(32.W)) // 用于调试的内存地址
     val debugmemdata = Output(UInt(32.W)) // 用于调试的内存数据
@@ -93,7 +92,6 @@ class core extends Module{
   // 从执行单元 (EXU) 获取 ALU 的输入和输出
   io.debugin1   := IDU.io.out.bits.rs1_data
   io.debugin2   := IDU.io.out.bits.rs2_data
-  io.debugImm   := IDU.io.out.bits.imm // 添加立即数调试输出
   io.debugout1  := EXU.io.out.bits.rd_data
 
   // 连接内存调试信号
