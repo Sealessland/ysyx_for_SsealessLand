@@ -1,107 +1,19 @@
-package gyr
+package xininn
 import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.decode._
 import org.chipsalliance.rvdecoderdb
-
-
-
-
 case class Insn(inst: rvdecoderdb.Instruction) extends DecodePattern {
   override def bitPat: BitPat = BitPat("b" + inst.encoding.toString())
 }
-
 object Insn {
   implicit class addMethodsToInsn(i: Insn) {
     def hasArg(arg: String): Boolean = i.inst.args.map(_.name).contains(arg)
   }
 }
-
-//object Opcode extends DecodeField[Insn, UInt] {
-//  override def name = "opcode"
-//
-//  override def chiselType = UInt(8.W)
-//
-//  override def genTable(i: Insn): BitPat = i.inst.name match {
-//    case "add"    => BitPat("b00000001")
-//    case "sub"    => BitPat("b00000010")
-//    case "sll"    => BitPat("b00000011")
-//    case "slt"    => BitPat("b00000100")
-//    case "sltu"   => BitPat("b00000101")
-//    case "xor"    => BitPat("b00000110")
-//    case "srl"    => BitPat("b00000111")
-//    case "sra"    => BitPat("b00001000")
-//    case "or"     => BitPat("b00001001")
-//    case "and"    => BitPat("b00001010")
-//
-//    // I-type 立即数指令
-//    case "addi"   => BitPat("b00001011")
-//    case "slti"   => BitPat("b00001100")
-//    case "sltiu"  => BitPat("b00001101")
-//    case "xori"   => BitPat("b00001110")
-//    case "ori"    => BitPat("b00001111")
-//    case "andi"   => BitPat("b00010000")
-//    case "slli"   => BitPat("b00010001")
-//    case "srli"   => BitPat("b00010010")
-//    case "srai"   => BitPat("b00010011")
-//
-//    // 加载指令
-//    case "lb"     => BitPat("b00010100")
-//    case "lh"     => BitPat("b00010101")
-//    case "lw"     => BitPat("b00010110")
-//    case "lbu"    => BitPat("b00010111")
-//    case "lhu"    => BitPat("b00011000")
-//
-//    // 存储指令
-//    case "sb"     => BitPat("b00011001")
-//    case "sh"     => BitPat("b00011010")
-//    case "sw"     => BitPat("b00011011")
-//
-//    // 分支指令
-//    case "beq"    => BitPat("b00011100")
-//    case "bne"    => BitPat("b00011101")
-//    case "blt"    => BitPat("b00011110")
-//    case "bge"    => BitPat("b00011111")
-//    case "bltu"   => BitPat("b00100000")
-//    case "bgeu"   => BitPat("b00100001")
-//
-//    // 跳转指令
-//    case "jal"    => BitPat("b00100010")
-//    case "jalr"   => BitPat("b00100011")
-//
-//    // U-type 指令
-//    case "lui"    => BitPat("b00100100")
-//    case "auipc"  => BitPat("b00100101")
-//
-//    // 系统指令
-//    case "ecall"  => BitPat("b00100110")
-//    case "ebreak" => BitPat("b00100111")
-//
-//
-//
-//
-//    // 内存同步指令
-//    case "fence"  => BitPat("b00101000")
-//    case "fence.i"=> BitPat("b00101001")
-//
-//    // CSR指令
-//    case "csrrw"  => BitPat("b00101010")
-//    case "csrrs"  => BitPat("b00101011")
-//    case "csrrc"  => BitPat("b00101100")
-//    case "csrrwi" => BitPat("b00101101")
-//    case "csrrsi" => BitPat("b00101110")
-//    case "csrrci" => BitPat("b00101111")
-//    // 默认情况
-//    case _        => BitPat("b00000000")
-//
-//  }
-//}
 object Opcode extends DecodeField[Insn,UInt]{
-
   override def name: String = "opcode"
-
   override def chiselType: UInt = UInt(5.W)
-
   override def genTable(i: Insn): BitPat = i.inst.name match{
     case "add"   => BitPat(AluFunc.add)
     case "sub"   => BitPat(AluFunc.sub )
@@ -139,12 +51,7 @@ object Opcode extends DecodeField[Insn,UInt]{
     case "sh"    => BitPat(AluFunc.add )
     case "sw"    => BitPat(AluFunc.add )
     case "auipc" => BitPat(AluFunc.add)
-    case "csrrw"  => BitPat(AluFunc.NOP)
-    case "csrrs"  => BitPat(AluFunc.or)
-    case "csrrc"  => BitPat(AluFunc.nand)
-    case "csrrwi" => BitPat(AluFunc.NOP)
-    case "csrrsi" => BitPat(AluFunc.or)
-    case "csrrci" => BitPat(AluFunc.nand)
+
     case "mret" => BitPat(AluFunc.NOP)
 
 
@@ -154,7 +61,6 @@ object Opcode extends DecodeField[Insn,UInt]{
     case _       => BitPat(AluFunc.NOP)
   }
 }
-
 object Mlen extends DecodeField[Insn, UInt] {
   override def name: String = "m_len"
 
@@ -170,11 +76,9 @@ object Mlen extends DecodeField[Insn, UInt] {
     case _            => BitPat("b0000") // Default to 32 bits for other instructions
   }
 }
-
 object ImmTypeEnum extends ChiselEnum {
   val immNone, immI, immS, immB, immU, immJ, immShamtD, immShamtW ,immZ= Value
 }
-
 object ImmType extends DecodeField[Insn, ImmTypeEnum.Type] {
   override def name = "imm_type"
 
@@ -197,11 +101,10 @@ object ImmType extends DecodeField[Insn, ImmTypeEnum.Type] {
       .headOption // different ImmType will not appear in the Seq
       .getOrElse(ImmTypeEnum.immNone)
 
-    BitPat(immType.litValue.U((immType.getWidth).W))
+    BitPat(immType.litValue.U(immType.getWidth.W))
   }
 
 }
-
 object IsJal extends BoolDecodeField[Insn] {
   override def name: String = "jump_en"
 
@@ -220,9 +123,8 @@ object IsJalr extends BoolDecodeField[Insn] {
   override def genTable(i: Insn): BitPat = i.inst.name match {
     case "jalr" => y
     case _ => n
+  }
 }
-}
-
 object IsAuipc extends BoolDecodeField[Insn] {
   override def name: String = "auipc_en"
 
@@ -276,20 +178,29 @@ object RdEn extends BoolDecodeField[Insn] {
   override def genTable(i: Insn): BitPat = if (i.hasArg("rd")) y else n
 }
 
-object CsrEn extends BoolDecodeField[Insn] {
+object CsrEn extends DecodeField[Insn, UInt] {
   override def name: String = "csr_en"
 
+
+  override def chiselType: UInt = UInt(4.W)
+
   override def genTable(i: Insn): BitPat = i.inst.name match {
-    case "csrrw"  => BitPat("b1")
-    case "csrrs"  => BitPat("b1")
-    case "csrrc"  => BitPat("b1")
-    case "csrrwi" => BitPat("b1")
-    case "csrrsi" => BitPat("b1")
-    case "csrrci" => BitPat("b1")
-    case "ecall"  => BitPat("b1")
-    case _        => BitPat("b0")
+    // Register-based CSR instructions
+    case "csrrw"  => gen(N,BitPat(WRITE))
+    case "csrrs"  => gen(N, BitPat(SET))
+    case "csrrc"  => gen(N, BitPat(CLEAR))
+
+    // Immediate-based CSR instructions
+    case "csrrwi" => gen(Y, BitPat(WRITE))
+    case "csrrsi" => gen(Y, BitPat(SET))
+    case "csrrci" => gen(Y, BitPat(CLEAR))
+
+    // 其他所有指令都不是 CSR 操作
+    case _        => gen(N, BitPat(NOP)) // 默认生成 NOP (No Operation)
   }
 }
+
+
 
 
 object MwEn extends BoolDecodeField[Insn]{
@@ -378,7 +289,7 @@ class Decode extends Module {
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr,IsAuipc,IsEbreak,IsMret,IsEcall))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn))
   val decodedBundle = decodeTable.decode(inst)
   println(decodeTable, decodedBundle)
 
@@ -405,38 +316,52 @@ class Decode extends Module {
       ImmTypeEnum.immZ      -> imm_z
     )
   )
-  io.d2r.rs1_en   := decodedBundle(Rs1En)
-  io.d2r.rs2_en   := decodedBundle(Rs2En)
-  io.d2r.rs1_addr := Mux(decodedBundle(Rs1En),inst(19, 15),0.U)
-  io.d2r.rs2_addr := Mux(decodedBundle(Rs2En),inst(24, 20),0.U)
-  io.csr.csrAddr  := Mux(decodedBundle(CsrEn),inst(31, 20),Mux(decodedBundle(IsEcall),0x305.U,0.U(12.W)))
 
 
-  io.ebreakhandler:= decodedBundle(IsEbreak)
-  io.out.bits.rd_en     := decodedBundle(RdEn)
-  io.out.bits.jump_en   := decodedBundle(IsJal)
-  io.out.bits.jalr_en    :=decodedBundle(IsJalr)
-  io.out.bits.unsign_en := decodedBundle(UnsignEn)
-  io.out.bits.lsu_en    := decodedBundle(LsuEn)
-  io.out.bits.mw_en     := decodedBundle(MwEn)
-  io.out.bits.mlen     := decodedBundle(Mlen)
-  io.out.bits.branch_en := decodedBundle(BranchEn)
-  io.out.bits.rs1_en    := decodedBundle(Rs1En)
-  io.out.bits.rs2_en    := decodedBundle(Rs2En)
-  io.out.bits.auipc_en  := decodedBundle(IsAuipc)
-  io.out.bits.rs1_data  := io.r2d.rs1_data
-  io.out.bits.rs2_data  := io.r2d.rs2_data
-  io.out.bits.rd_addr   := inst(11, 7)
-  io.out.bits.csr_en    := decodedBundle(CsrEn)
-  io.out.bits.mret_en   := decodedBundle(IsMret)
-  io.out.bits.ecall_en  := decodedBundle(IsEcall)
-  io.out.bits.csr_data  := io.csr.csrData
-  io.out.bits.csr_addr  :=  Mux(decodedBundle(IsMret),0x341.U(12.W),Mux(decodedBundle(CsrEn),inst(31, 20),0.U))
-  io.out.bits.pc         := io.in.bits.pc // Pass the PC value from F2D to D2E
-  when(decodedBundle(IsEcall)){
-    io.csr.csrAddr := 0x305.U // Set CSR address for ecall
-  }
-  io.in.ready := io.out.ready
-  io.out.valid:=io.in.valid
+
+
   println(decodeTable, decodedBundle)
+}
+object systeminst extends DecodeField[Insn,UInt]{
+  override def name :String := "system_type"
+
+  override def chiselType: UInt = UInt(4.W)
+  override def genTable (i:Insn): BitPat = i.inst.name match {
+    case "ecall"      => BitPat("b1000")
+    case "ebreak"     => BitPat("b0001")
+    case "mret"       => BitPat("b0001")
+    case "sret"       => BitPat("b0010")
+    case "wfi"        => BitPat("b0011")
+    case "sfence.vma" => BitPat("b0100")
+    case "fence"      => BitPat("b0101")
+    case "fence.i"    => BitPat("b0110")
+
+
+  }
+}
+
+class inst extends Bundle{
+  val inst = UInt(32.W)
+  val pc   = UInt(32.W)
+}
+class msg extends Bundle{
+  val mlen    = UInt(3.W)
+  val imm     = UInt(32.W)
+  val in1sel  = UInt(3.W)
+  val in2sel  = UInt(3.W)
+  val csr_en  = Bool
+  val csr_op  = UInt(4.W)
+  val opcode  = UInt(5.W)
+  val rs1data = UInt(32.W)
+  val rs2data = UInt(32.W)
+  val rd_en   = UInt(1.W)
+  val rdaddr  = UInt(5.W)
+  val pc      = UInt(32.W)
+  val system  = UInt(4.W)
+  val
+
+
+}
+class IDU extends Module{
+
 }
