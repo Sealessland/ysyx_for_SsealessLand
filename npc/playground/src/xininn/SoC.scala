@@ -92,3 +92,7 @@ class ysyx_23060321 extends Module {
     master.r.ready := false.B
   }
 }
+
+class simcore extends Module{
+
+}
