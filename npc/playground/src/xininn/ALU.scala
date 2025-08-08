@@ -15,8 +15,8 @@ object AluFunc {
   def mul: UInt = "b00011".U(SZ.W)
   def div: UInt = "b00100".U(SZ.W)
   def rem: UInt = "b00101".U(SZ.W)
-  def sge: UInt = "b00110".U(SZ.W) // rs1 >= rs2
-  def slt: UInt = "b00111".U(SZ.W) // rs1 < rs2
+  def sge: UInt = "b00110".U(SZ.W) // rs1 >= rs2 (signed)
+  def slt: UInt = "b00111".U(SZ.W) // rs1 < rs2 (signed)
   def equ: UInt = "b01000".U(SZ.W) // rs1 == rs2
   def neq: UInt = "b01001".U(SZ.W) // rs1 != rs2
   def and: UInt = "b01010".U(SZ.W)
@@ -25,14 +25,21 @@ object AluFunc {
   def sll: UInt = "b01101".U(SZ.W)
   def srl: UInt = "b01110".U(SZ.W)
   def sra: UInt = "b01111".U(SZ.W)
-  def unsign:UInt = "b10000".U(SZ.W)
+  
+  // 无符号操作常量
+  def sltu: UInt = "b10001".U(SZ.W) // rs1 < rs2 (unsigned)  
+  def sgeu: UInt = "b10010".U(SZ.W) // rs1 >= rs2 (unsigned)
+  def divu: UInt = "b10011".U(SZ.W) // div unsigned
+  def remu: UInt = "b10100".U(SZ.W) // rem unsigned
+  def mulu: UInt = "b10101".U(SZ.W) // mul unsigned (high part)
 }
+
 class AluIO extends Bundle{
   val in1 = Input(UInt(32.W))
   val in2 = Input(UInt(32.W))
   val out = Output(UInt(32.W))
   val opcode = Input(UInt(5.W))
-  val unsign_en = Input(Bool())
+  // 移除 unsign_en 信号
 }
 
 class ALU extends Module {
@@ -45,54 +52,54 @@ class ALU extends Module {
   val sub_res = io.in1 - io.in2
 
   // --- Group 2: Comparison Results ---
-  val slt_res = Mux(io.unsign_en, io.in1 < io.in2, io.in1.asSInt < io.in2.asSInt)
-  val sge_res = Mux(io.unsign_en, io.in1 >= io.in2, io.in1.asSInt >= io.in2.asSInt)
-  val equ_res = io.in1 === io.in2
-  val neq_res = io.in1 =/= io.in2
+  val slt_res_signed = (io.in1.asSInt < io.in2.asSInt).asUInt
+  val slt_res_unsigned = (io.in1 < io.in2).asUInt
+  val sge_res_signed = (io.in1.asSInt >= io.in2.asSInt).asUInt
+  val sge_res_unsigned = (io.in1 >= io.in2).asUInt
+  val equ_res = (io.in1 === io.in2).asUInt
+  val neq_res = (io.in1 =/= io.in2).asUInt
 
-  // --- Group 3: Logical Results (Combined into one signal) ---
-  // Note: The results are Bits, so we cast the final result to UInt.
-  val logic_res = MuxLookup(io.opcode.asUInt, 0.U(32.W))(Seq(
-    AluFunc.and.asUInt -> (io.in1 & io.in2),
-    AluFunc.or.asUInt  -> (io.in1 | io.in2),
-    AluFunc.xor.asUInt -> (io.in1 ^ io.in2),
-  )).asUInt
+  // --- Group 3: Logical Results ---
+  val and_res = io.in1 & io.in2
+  val or_res = io.in1 | io.in2
+  val xor_res = io.in1 ^ io.in2
 
-  // --- Group 4: Shifter Results (Combined into one signal) ---
+  // --- Group 4: Shifter Results ---
   val sll_res = io.in1 << shamt
   val srl_res = io.in1 >> shamt
   val sra_res = (io.in1.asSInt >> shamt).asUInt
-  val shift_res = MuxLookup(io.opcode.asUInt, 0.U(32.W))(Seq(
-    AluFunc.sll.asUInt -> sll_res.asUInt,
-    AluFunc.srl.asUInt -> srl_res.asUInt,
-    AluFunc.sra.asUInt -> sra_res.asUInt
-  ))
 
   // --- Group 5: M-extension Results ---
-  val mul_res = (io.in1 * io.in2)(31,0)
-  val div_res = Mux(io.unsign_en, io.in1 / io.in2, (io.in1.asSInt / io.in2.asSInt).asUInt)
-  val rem_res = Mux(io.unsign_en, io.in1 % io.in2, (io.in1.asSInt % io.in2.asSInt).asUInt)
-
+  val mul_res = (io.in1 * io.in2)(31, 0)
+  val mulu_res = (io.in1 * io.in2)(63, 32) // 无符号高位乘法
+  val div_res_signed = (io.in1.asSInt / io.in2.asSInt).asUInt
+  val div_res_unsigned = io.in1 / io.in2
+  val rem_res_signed = (io.in1.asSInt % io.in2.asSInt).asUInt
+  val rem_res_unsigned = io.in1 % io.in2
 
   // --- Final Output Selection ---
-  // Now we select from the intermediate group results. All are UInt.
   io.out := MuxLookup(io.opcode.asUInt, 0.U(32.W))(Seq(
-    AluFunc.add.asUInt -> add_res,
-    AluFunc.sub.asUInt -> sub_res,
-    AluFunc.slt.asUInt -> slt_res,
-    AluFunc.sge.asUInt -> sge_res,
-    AluFunc.equ.asUInt -> equ_res,
-    AluFunc.neq.asUInt -> neq_res,
-    AluFunc.and.asUInt -> logic_res,
-    AluFunc.or.asUInt  -> logic_res,
-    AluFunc.xor.asUInt -> logic_res,
-    AluFunc.sll.asUInt -> shift_res,
-    AluFunc.srl.asUInt -> shift_res,
-    AluFunc.sra.asUInt -> shift_res,
-    AluFunc.mul.asUInt -> mul_res,
-    AluFunc.div.asUInt -> div_res,
-    AluFunc.rem.asUInt -> rem_res,
-    AluFunc.NOP.asUInt -> io.in1
+    AluFunc.add.asUInt  -> add_res,
+    AluFunc.sub.asUInt  -> sub_res,
+    AluFunc.slt.asUInt  -> slt_res_signed,
+    AluFunc.sltu.asUInt -> slt_res_unsigned,    // 无符号比较
+    AluFunc.sge.asUInt  -> sge_res_signed,
+    AluFunc.sgeu.asUInt -> sge_res_unsigned,    // 无符号大于等于
+    AluFunc.equ.asUInt  -> equ_res,
+    AluFunc.neq.asUInt  -> neq_res,
+    AluFunc.and.asUInt  -> and_res,
+    AluFunc.or.asUInt   -> or_res,
+    AluFunc.xor.asUInt  -> xor_res,
+    AluFunc.sll.asUInt  -> sll_res,
+    AluFunc.srl.asUInt  -> srl_res,
+    AluFunc.sra.asUInt  -> sra_res,
+    AluFunc.mul.asUInt  -> mul_res,
+    AluFunc.mulu.asUInt -> mulu_res,            // 无符号乘法
+    AluFunc.div.asUInt  -> div_res_signed,
+    AluFunc.divu.asUInt -> div_res_unsigned,    // 无符号除法
+    AluFunc.rem.asUInt  -> rem_res_signed,
+    AluFunc.remu.asUInt -> rem_res_unsigned,    // 无符号求余
+    AluFunc.NOP.asUInt  -> io.in1
   ))
 }
 
@@ -101,7 +108,7 @@ object CsrAluOp {
   val width = 4
 
   // 定义各个操作的常量 (使用 BitPat 可以方便地用于指令译码)
-  // 格式: [is_imm, op_type(2 bits), reserved(1 bit)]
+  // 格式: [is_imm, op_type(2 bizts), reserved(1 bit)]
   // 我们稍微调整一下结构，把操作类型放在低位，is_imm放在高位，更符合习惯
   // 格式: [is_imm (1 bit)] [op_type (3 bits)]
 
@@ -128,7 +135,6 @@ object CsrAluOp {
 // 从译码阶段传入的微操作 Bundle
 class CsrMicroOp extends Bundle {
   val func      = Input(CsrAluOp())       // 4位的操作类型
-  val csr_addr  = Input(UInt(12.W))       // CSR 地址
   val rs1_data  = Input(UInt(32.W))       // 来自源寄存器 rs1 的数据
   val zimm      = Input(UInt(32.W))       // 5位立即数零扩展后的值
 }
@@ -140,7 +146,7 @@ class CsrUnitOutput extends Bundle {
   val csr_write_enable = Output(Bool())      // CSR 文件写使能
 }
 
-class CSRUnit extends Module {
+class CsrAlu extends Module {
   val io = IO(new Bundle {
     val uop          = new CsrMicroOp()          // 输入: 来自译码的微操作
     val csr_old_value = Input(UInt(32.W))        // 输入: 从 CSR 文件读出的当前值
@@ -151,33 +157,25 @@ class CSRUnit extends Module {
   val is_imm_op = io.uop.func(3) // 最高位判断是否是立即数版本
   val op_type   = io.uop.func(2, 0) // 低3位判断是 Write/Set/Clear
 
-  // --- 1. 选择源操作数 ---
-  // 根据 is_imm_op 选择是使用 rs1 的数据还是立即数 zimm
   val write_source = Mux(is_imm_op, io.uop.zimm, io.uop.rs1_data)
 
-  // --- 2. 计算 CSR 的新值 ---
   val csr_new_value_w = Wire(UInt(32.W))
-
+  csr_new_value_w := 0.U
   switch(op_type) {
     is(CsrAluOp.WRITE) {
-      // Write: 新值直接就是源操作数
       csr_new_value_w := write_source
     }
     is(CsrAluOp.SET) {
-      // Set: 新值 = 旧值 OR 源操作数
       csr_new_value_w := io.csr_old_value | write_source
     }
     is(CsrAluOp.CLEAR) {
-      // Clear: 新值 = 旧值 AND (NOT 源操作数)
       csr_new_value_w := io.csr_old_value & (~write_source)
     }
     is(CsrAluOp.NOP) {
-      // 默认情况下（如 NOP），新值等于旧值
       csr_new_value_w := io.csr_old_value
     }
   }
 
-  // --- 3. 生成写使能信号 (处理只读情况) ---
   val perform_write = Wire(Bool())
 
   // 默认情况下，如果操作不是 NOP，就执行写操作
@@ -187,16 +185,15 @@ class CSRUnit extends Module {
   when((op_type === CsrAluOp.SET || op_type === CsrAluOp.CLEAR) && write_source === 0.U) {
     perform_write := false.B
   }
-
   // --- 4. 连接输出端口 ---
-
   // 写回 rd 的值永远是 CSR 的旧值
   io.out.result_for_rd := io.csr_old_value
-
   // 连接计算出的新值和写使能
   io.out.csr_new_value := csr_new_value_w
   io.out.csr_write_enable := perform_write
 }
+
+
 
 class eallhandler extends Module{
   val io = IO(new Bundle {{

@@ -15,7 +15,8 @@ CPPFLAGS = -I$(VERILATOR_ROOT)/include \
            -I$(VERILATOR_ROOT)/include/vltstd \
            -I./include \
            -I./\
-           -I./v_model/
+           -I./v_model/\
+           -I./SoC_model/
 
 # 添加预处理器宏定义（这个部分有问题需要修复）
 
@@ -34,6 +35,7 @@ VERILATED_SRCS = $(VERILATOR_ROOT)/include/verilated.cpp \
                  $(VERILATOR_ROOT)/include/verilated_vcd_c.cpp \
                  $(VERILATOR_ROOT)/include/verilated_dpi.cpp
 VERILATOR_MODEL = v_model/Vcore__ALL.a
+VERILATOR_MODEL += SoC_model/VysyxSoCFull__ALL.a
 LDFLAGS = -lpthread -lreadline -g
 LDFLAGS += -lcapstone
 IMG ?=

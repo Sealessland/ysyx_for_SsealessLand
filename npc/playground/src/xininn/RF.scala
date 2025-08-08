@@ -10,9 +10,9 @@ class W2R extends Bundle {
 
 class D2R extends Bundle{
   val rs1_addr = Output(UInt(5.W))
-  val rs1_en   = Output(Bool())
+//  val rs1_en   = Output(Bool())
   val rs2_addr = Output(UInt(5.W))
-  val rs2_en   = Output(Bool())
+//  val rs2_en   = Output(Bool())
 }
 
 class R2E extends Bundle{

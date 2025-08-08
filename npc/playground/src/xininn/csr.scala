@@ -1,8 +1,7 @@
 package xininn
 import chisel3._
 import chisel3.util._
-class csr extends Module{
-  val io = IO(new Bundle{
+class csrBundle extends Bundle{
   val r_en   = Input(Bool())
   val w_addr = Input(UInt(12.W))
   val w_data = Input(UInt(32.W))
@@ -11,7 +10,9 @@ class csr extends Module{
   val w_en = Input(Bool())
   val pc = Input(UInt(32.W))
   val pc_en = Input(Bool())
-  })
+}
+class csr extends Module{
+  val io = IO(new csrBundle)
 
   val MSTATUS = 0x300.U(12.W)
   val MTVEC  = 0x305.U(12.W)

@@ -35,7 +35,7 @@ class R2E extends Bundle{
  */
 class rfBundle extends Bundle {
   // d2r: 从 Decode 阶段来的读请求
-  // D2R 定义在 Decode.scala 中，这里 Flipped 将其方向转为输入
+  // D2R 定义在 IDU.scala 中，这里 Flipped 将其方向转为输入
   val d2r = Flipped(new D2R)
   // w2r: 从 WriteBack 阶段来的写请求
   val w2r = Flipped(new W2R)

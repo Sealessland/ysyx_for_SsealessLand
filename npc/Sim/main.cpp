@@ -1,66 +1,71 @@
 // main.cpp
 #include<disasm.h>
 #include "include/mem.h"
-#include "include/core-exe.h"
 #include "include/sdb.h"
 #include "include/difftest.h"
-#include "include/parser.h"  // 添加parser头文件
+#include "include/parser.h"
 #include "verilated.h"
 #include <iostream>
+#include <memory> // 使用智能指针
 #include<states.h>
 
-// 全局执行器指针，供调试器使用
-CoreExecutor* g_executor = nullptr;
+#define SOC 1 // 假设我们正在SoC模式下
 
-int main(int argc, char** argv) {
-    test_disassembler();
-    
-    // 反汇编单条指令
-    uint32_t instruction = 0x009704b3;  // add s1, a4, s1
-    uint32_t addr = 0x80000114;
-    
-    std::cout << disassemble(addr, instruction) << std::endl;
-    std::cout << disassemble_with_colors(addr, instruction) << std::endl;
-    
-
-    // 解析命令行参数
-#ifdef DIFFTEST
-    std::cout<<"marco enabled"<<std::endl;
+#ifdef CORE
+#include "include/core-exe.h"
+CoreExecutor* g_executor = nullptr; // g_executor为调试器提供Core模型
 #endif
 
+#ifdef SOC
+#include "include/SoC-exe.h"
+VysyxSoCFull* g_executor = nullptr; // g_executor为调试器提供SoC模型
+#endif
+
+int main(int argc, char** argv) {
+    // --- 参数解析与通用初始化 ---
     CoreConfig cfg = parse_args(argc, argv);
-
-    // 初始化Verilator上下文
     Verilated::commandArgs(argc, argv);
-
-    // 获取内存实例并初始化
     Memory& memory = get_memory();
-
-    // 加载内存
     if (!cfg.memory_file.empty()) {
-        if (!memory.load_from_file(cfg.memory_file, cfg.start_pc)) {
-            std::cerr << "加载内存文件失败: " << cfg.memory_file << std::endl;
-            return 1;
-        }
+        memory.load_from_file(cfg.memory_file, cfg.start_pc);
     } else {
-        // 加载默认内置镜像
         memory.load_default_image(cfg.start_pc);
     }
 
-    // 创建并初始化CPU执行器
+#ifdef SOC
+    // --- SoC 模式逻辑 ---
+    SoCExecutor executor;
+    SoCConfig soc_cfg;
+    soc_cfg.wave_file = cfg.wave_file;
+    if (!executor.initialize(soc_cfg)) {
+        std::cerr << "初始化SoC执行器失败" << std::endl;
+        return 1;
+    }
+    g_executor = executor.get_soc(); // 正确赋值
+
+    // SoC模式下difftest暂不兼容
+    if (cfg.diff_test) {
+        std::cerr << "警告: 差分测试当前不支持SoC模式。" << std::endl;
+    }
+
+    init_sdb();
+    if (cfg.debug) {
+        sdb_mainloop();
+    } else {
+        executor.run_cycles(99999999);
+    }
+
+#else
+    // --- Core 模式逻辑 ---
     CoreExecutor executor;
     if (!executor.initialize(cfg)) {
         std::cerr << "初始化CPU执行器失败" << std::endl;
         return 1;
     }
+    // 注意: g_executor 的类型在Core模式下应为 Vcore* (需配合difftest和sdb)
+    // 您可能需要调整 g_executor 的定义或 get_core() 的返回值
+    // g_executor = executor.get_core();
 
-    // 设置全局执行器指针
-    g_executor = &executor;
-
-    // 初始化调试器
-    init_sdb();
-
-    // 如果启用差分测试，初始化差分测试模块
     if (cfg.diff_test && !cfg.diff_so.empty()) {
         if (!difftest_init(cfg.diff_so.c_str(), executor.get_core())) {
             std::cerr << "初始化差分测试失败: " << cfg.diff_so << std::endl;
@@ -68,25 +73,22 @@ int main(int argc, char** argv) {
         }
     }
 
-    // 根据模式运行
+    init_sdb();
     if (cfg.debug) {
-        // 进入调试模式
         sdb_mainloop();
     } else {
-        // 直接运行
         executor.run_insts(99999999);
     }
 
-    // 清理差分测试资源
     if (cfg.diff_test) {
         difftest_cleanup();
     }
+#endif
 
-    // 清理全局指针
+    // --- 通用收尾逻辑 ---
     g_executor = nullptr;
-    int exit_code = 0;
-    if (is_exit_status_bad()) {
-        exit_code = cpu_state.halt_ret != 0 ? cpu_state.halt_ret : 1;
+    int exit_code = is_exit_status_bad() ? (cpu_state.halt_ret != 0 ? cpu_state.halt_ret : 1) : 0;
+    if (exit_code != 0) {
         std::cout << "程序异常终止，退出码: " << exit_code << std::endl;
     } else {
         std::cout << "程序正常结束，退出码: 0" << std::endl;
@@ -94,4 +96,3 @@ int main(int argc, char** argv) {
 
     return exit_code;
 }
-
