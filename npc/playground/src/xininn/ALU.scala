@@ -5,6 +5,8 @@ import chisel3.util._
 
 
 
+
+
 object AluFunc {
   val SZ = 5
   def NOP: UInt = "b00000".U(SZ.W)
@@ -23,7 +25,7 @@ object AluFunc {
   def sll: UInt = "b01101".U(SZ.W)
   def srl: UInt = "b01110".U(SZ.W)
   def sra: UInt = "b01111".U(SZ.W)
-  def nand: UInt ="b10000".U(SZ.W)
+  def unsign:UInt = "b10000".U(SZ.W)
 }
 class AluIO extends Bundle{
   val in1 = Input(UInt(32.W))
@@ -36,7 +38,7 @@ class AluIO extends Bundle{
 class ALU extends Module {
   val io = IO(new AluIO)
 
-  val shamt = io.in2(4, 0)
+  val shamt: UInt = io.in2(4, 0)
 
   // --- Group 1: Arithmetic Results ---
   val add_res = io.in1 + io.in2
@@ -54,7 +56,6 @@ class ALU extends Module {
     AluFunc.and.asUInt -> (io.in1 & io.in2),
     AluFunc.or.asUInt  -> (io.in1 | io.in2),
     AluFunc.xor.asUInt -> (io.in1 ^ io.in2),
-    AluFunc.nand.asUInt -> (io.in1 & ~io.in2)
   )).asUInt
 
   // --- Group 4: Shifter Results (Combined into one signal) ---
@@ -170,7 +171,7 @@ class CSRUnit extends Module {
       // Clear: 新值 = 旧值 AND (NOT 源操作数)
       csr_new_value_w := io.csr_old_value & (~write_source)
     }
-    default {
+    is(CsrAluOp.NOP) {
       // 默认情况下（如 NOP），新值等于旧值
       csr_new_value_w := io.csr_old_value
     }
@@ -195,4 +196,14 @@ class CSRUnit extends Module {
   // 连接计算出的新值和写使能
   io.out.csr_new_value := csr_new_value_w
   io.out.csr_write_enable := perform_write
+}
+
+class eallhandler extends Module{
+  val io = IO(new Bundle {{
+    val ecall_en = Input(Bool())
+    val pc_en = Output(Bool())
+    val pc  = Output(UInt(32.W))
+    val cause_addr = Output(UInt(12.W))
+    val cause = Output(UInt(32.W))
+  }})
 }
