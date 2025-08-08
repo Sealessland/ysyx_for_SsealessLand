@@ -6,7 +6,7 @@ import chisel3.util._
 class WBBus extends Bundle {
   val in = Flipped(Decoupled(new L2W))
   val out = new W2R // 输出到寄存器堆
-  val w2f = Decoupled(new W2F) // 输出到 Fetch 阶段
+  val w2f = new W2F // 输出到 Fetch 阶段
 }
 
 /**
@@ -19,19 +19,18 @@ class WriteBack extends Module {
 
   // --- 3. 输出到IFU的握手逻辑 ---
   // valid信号在输入有效时被置高
-  io.w2f.valid := io.in.valid
   // 将需要的信息传递给IFU
-  io.w2f.bits.inst_done := io.in.valid && io.in.bits.rd_en
-
+  io.in.bits.ls_en
+  io.w2f.inst_done := RegNext(io.in.valid && io.out.en  && io.in.bits.ls_en, init = false.B)
   // --- 1. 输入端握手逻辑 (修正后) ---
   // WBU是否准备好接收新数据(io.in.ready)，
   // 取决于它是否能把当前数据的结果发送出去(io.w2f.ready)。
   // 这重建了至关重要的反压链条。
-  io.in.ready := io.w2f.ready
+  io.in.ready := 1.U // 这里假设WBU总是准备好接收数据
 
   // --- 2. 输出端驱动逻辑 (连接到寄存器堆) ---
   // 这部分逻辑保持不变
-  io.out.en   := io.in.valid && io.in.bits.rd_en
+  io.out.en   := io.in.valid
   io.out.addr := io.in.bits.rd_addr
   io.out.data := io.in.bits.rd_data
 }

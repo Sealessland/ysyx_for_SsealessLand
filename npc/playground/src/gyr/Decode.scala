@@ -5,26 +5,6 @@ import chisel3.util.experimental.decode._
 import org.chipsalliance.rvdecoderdb
 
 
-object AluFunc {
-  val SZ = 5
-  def NOP: UInt = "b00000".U(SZ.W)
-  def add: UInt = "b00001".U(SZ.W)
-  def sub: UInt = "b00010".U(SZ.W)
-  def mul: UInt = "b00011".U(SZ.W)
-  def div: UInt = "b00100".U(SZ.W)
-  def rem: UInt = "b00101".U(SZ.W)
-  def sge: UInt = "b00110".U(SZ.W) // rs1 >= rs2
-  def slt: UInt = "b00111".U(SZ.W) // rs1 < rs2
-  def equ: UInt = "b01000".U(SZ.W) // rs1 == rs2
-  def neq: UInt = "b01001".U(SZ.W) // rs1 != rs2
-  def and: UInt = "b01010".U(SZ.W)
-  def or:  UInt = "b01011".U(SZ.W)
-  def xor: UInt = "b01100".U(SZ.W)
-  def sll: UInt = "b01101".U(SZ.W)
-  def srl: UInt = "b01110".U(SZ.W)
-  def sra: UInt = "b01111".U(SZ.W)
-}
-
 
 
 case class Insn(inst: rvdecoderdb.Instruction) extends DecodePattern {
@@ -158,6 +138,19 @@ object Opcode extends DecodeField[Insn,UInt]{
     case "sb"    => BitPat(AluFunc.add )
     case "sh"    => BitPat(AluFunc.add )
     case "sw"    => BitPat(AluFunc.add )
+    case "auipc" => BitPat(AluFunc.add)
+    case "csrrw"  => BitPat(AluFunc.NOP)
+    case "csrrs"  => BitPat(AluFunc.or)
+    case "csrrc"  => BitPat(AluFunc.nand)
+    case "csrrwi" => BitPat(AluFunc.NOP)
+    case "csrrsi" => BitPat(AluFunc.or)
+    case "csrrci" => BitPat(AluFunc.nand)
+    case "mret" => BitPat(AluFunc.NOP)
+
+
+
+
+    case "lui"   => BitPat(AluFunc.add)
     case _       => BitPat(AluFunc.NOP)
   }
 }
@@ -165,21 +158,21 @@ object Opcode extends DecodeField[Insn,UInt]{
 object Mlen extends DecodeField[Insn, UInt] {
   override def name: String = "m_len"
 
-  override def chiselType: UInt = UInt(3.W)
+  override def chiselType: UInt = UInt(4.W)
 
   override def genTable(i: Insn): BitPat = i.inst.name match {
-    case "lb" | "lbu" => BitPat("b001") // 8 bits
-    case "lh" | "lhu" => BitPat("b010") // 16 bits
-    case "lw"         => BitPat("b100") // 32 bits
-    case "sb"         => BitPat("b001") // 8 bits
-    case "sh"         => BitPat("b010") // 16 bits
-    case "sw"         => BitPat("b100") // 32 bits
-    case _            => BitPat("b000") // Default to 32 bits for other instructions
+    case "lb" | "lbu" => BitPat("b0001") // 8 bits
+    case "lh" | "lhu" => BitPat("b0011") // 16 bits
+    case "lw"         => BitPat("b1111") // 32 bits
+    case "sb"         => BitPat("b0001") // 8 bits
+    case "sh"         => BitPat("b0011") // 16 bits
+    case "sw"         => BitPat("b1111") // 32 bits
+    case _            => BitPat("b0000") // Default to 32 bits for other instructions
   }
 }
 
 object ImmTypeEnum extends ChiselEnum {
-  val immNone, immI, immS, immB, immU, immJ, immShamtD, immShamtW = Value
+  val immNone, immI, immS, immB, immU, immJ, immShamtD, immShamtW ,immZ= Value
 }
 
 object ImmType extends DecodeField[Insn, ImmTypeEnum.Type] {
@@ -197,6 +190,7 @@ object ImmType extends DecodeField[Insn, ImmTypeEnum.Type] {
         case "jimm20"                => ImmTypeEnum.immJ
         case "shamtd"                => ImmTypeEnum.immShamtD
         case "shamtw"                => ImmTypeEnum.immShamtW
+        case "zimm5"                 => ImmTypeEnum.immZ
         case _                       => ImmTypeEnum.immNone
       })
       .filterNot(_ == ImmTypeEnum.immNone)
@@ -229,13 +223,22 @@ object IsJalr extends BoolDecodeField[Insn] {
 }
 }
 
-//object IsJalr extends BoolDecodeField[Insn] {
-//  override def name: String = "jalr_en"
-//  override def genTable(i: Insn): BitPat = i.inst.name match {
-//    case "jalr" => y
-//    case _ => n
-//  }
-//}
+object IsAuipc extends BoolDecodeField[Insn] {
+  override def name: String = "auipc_en"
+
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "auipc" => y
+    case _       => n
+  }
+}
+object IsEbreak extends BoolDecodeField[Insn] {
+  override def name: String = "is_ebreak"
+
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "ebreak" => y
+    case _        => n
+  }
+}
 object LsuEn extends BoolDecodeField[Insn] {
   override def name: String = "lsu_en"
   override def genTable(i: Insn): BitPat = i.inst.name match {
@@ -283,9 +286,12 @@ object CsrEn extends BoolDecodeField[Insn] {
     case "csrrwi" => BitPat("b1")
     case "csrrsi" => BitPat("b1")
     case "csrrci" => BitPat("b1")
+    case "ecall"  => BitPat("b1")
     case _        => BitPat("b0")
   }
 }
+
+
 object MwEn extends BoolDecodeField[Insn]{
   override def name = "mw_en"
 
@@ -298,34 +304,49 @@ object BranchEn extends BoolDecodeField[Insn]{
   override def name: String = "branch_en"
 
   override def genTable(i: Insn): BitPat = i.inst.name match {
-    case "beq" | "bne" | "blt" | "bge" | "bltu" | " bgeu" => y
+    case "beq" | "bne" | "blt" | "bge" | "bltu" | "bgeu" | "bbb" => y
     case _ => n
   }
 }
 
-class LSMessage extends Bundle{
-
+object IsMret extends BoolDecodeField[Insn]{
+  override def name: String = "mret_en"
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "mret" => y
+    case _      => n
+  }
 }
-
+object IsEcall extends BoolDecodeField[Insn]{
+  override def name: String = "is_ecall"
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "ecall" => y
+    case _       => n
+  }
+}
 class D2E extends Bundle{
-  val rs1_data = UInt(32.W)
-  val rs2_data = UInt(32.W)
+  val rs1_data = Input(UInt(32.W))
+  val rs2_data = Input(UInt(32.W))
   val rd_addr  = Output(UInt(5.W))
   val rd_en    = Output(Bool())
   val opcode   = Output(UInt(5.W))
   val imm      = Output(UInt(64.W))
   val pc       = Output(UInt(32.W))
   val rs2_en   = Output(Bool())
+  val rs1_en   = Output(Bool())
+  val mret_en  = Output(Bool())
+  val ecall_en = Output(Bool())
   // PC value for the instruction
   val unsign_en = Output(Bool())
   val csr_en    = Output(Bool())
+  val csr_data  = Output(UInt(32.W))
+  val csr_addr  = Output(UInt(12.W))
   val lsu_en    = Output(Bool())
   val mw_en     = Output(Bool())
-  val mlen      = Output(UInt(3.W))
+  val mlen      = Output(UInt(4.W))
   val branch_en = Output(Bool())
   val jump_en   = Output(Bool())
   val jalr_en    = Output(Bool())
-
+  val auipc_en   = Output(Bool())
 }
 class D2R extends Bundle{
   val rs1_addr = Output(UInt(5.W))
@@ -336,9 +357,10 @@ class D2R extends Bundle{
 class DUBus extends Bundle {
   val in = Flipped(Decoupled(new F2D))
   val out =Decoupled(new D2E)
+  val csr =Flipped(new csrR)
   val d2r = new D2R
   val r2d = Flipped(new R2E)
-
+  val ebreakhandler = Output(Bool())
 }
 
 class Decode extends Module {
@@ -346,7 +368,9 @@ class Decode extends Module {
   val inst = io.in.bits.inst
 
   val instTable  = rvdecoderdb.instructions(os.pwd / "riscv-opcodes")
-  val targetSets = Set("rv_i", "rv64_i", "rv_m", "rv64_m")
+  val targetSets = Set("rv_i", "rv64_i", "rv_m", "rv64_m" ,"rv32_i","rv_zicsr", "rv_system")
+
+
   // add implemented instructions here
   val instList = instTable
     .filter(instr => targetSets.contains(instr.instructionSet.name))
@@ -354,8 +378,9 @@ class Decode extends Module {
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, Rs1En, Rs2En, RdEn, IsJal, CsrEn,UnsignEn,LsuEn,BranchEn,Mlen,MwEn,IsJalr,IsAuipc,IsEbreak,IsMret,IsEcall))
   val decodedBundle = decodeTable.decode(inst)
+  println(decodeTable, decodedBundle)
 
   val imm_i: UInt = Cat(Fill(52, inst(31)), inst(31, 20))                              // I-type
   val imm_s: UInt = Cat(Fill(52, inst(31)), inst(31, 25), inst(11, 7))                 // S-type
@@ -364,6 +389,7 @@ class Decode extends Module {
   val imm_j      = Cat(Fill(44, inst(31)), inst(19, 12), inst(20), inst(30, 21), 0.U) // J-type
   val imm_shamtd = Cat(Fill(58, 0.U), inst(25, 20))
   val imm_shamtw = Cat(Fill(59, 0.U), inst(24, 20))
+  val imm_z = Cat(Fill(59, 0.U), inst(19, 15)) // Zero-extended immediate for Zimm5
   io.out.bits.opcode := decodedBundle(Opcode)
 
   val imm_type = decodedBundle(ImmType)
@@ -375,14 +401,18 @@ class Decode extends Module {
       ImmTypeEnum.immU      -> imm_u,
       ImmTypeEnum.immJ      -> imm_j,
       ImmTypeEnum.immShamtD -> imm_shamtd,
-      ImmTypeEnum.immShamtW -> imm_shamtw
+      ImmTypeEnum.immShamtW -> imm_shamtw,
+      ImmTypeEnum.immZ      -> imm_z
     )
   )
   io.d2r.rs1_en   := decodedBundle(Rs1En)
   io.d2r.rs2_en   := decodedBundle(Rs2En)
-  io.d2r.rs1_addr := inst(19, 15)
-  io.d2r.rs2_addr := inst(24, 20)
+  io.d2r.rs1_addr := Mux(decodedBundle(Rs1En),inst(19, 15),0.U)
+  io.d2r.rs2_addr := Mux(decodedBundle(Rs2En),inst(24, 20),0.U)
+  io.csr.csrAddr  := Mux(decodedBundle(CsrEn),inst(31, 20),Mux(decodedBundle(IsEcall),0x305.U,0.U(12.W)))
 
+
+  io.ebreakhandler:= decodedBundle(IsEbreak)
   io.out.bits.rd_en     := decodedBundle(RdEn)
   io.out.bits.jump_en   := decodedBundle(IsJal)
   io.out.bits.jalr_en    :=decodedBundle(IsJalr)
@@ -391,14 +421,21 @@ class Decode extends Module {
   io.out.bits.mw_en     := decodedBundle(MwEn)
   io.out.bits.mlen     := decodedBundle(Mlen)
   io.out.bits.branch_en := decodedBundle(BranchEn)
+  io.out.bits.rs1_en    := decodedBundle(Rs1En)
   io.out.bits.rs2_en    := decodedBundle(Rs2En)
+  io.out.bits.auipc_en  := decodedBundle(IsAuipc)
   io.out.bits.rs1_data  := io.r2d.rs1_data
   io.out.bits.rs2_data  := io.r2d.rs2_data
   io.out.bits.rd_addr   := inst(11, 7)
   io.out.bits.csr_en    := decodedBundle(CsrEn)
+  io.out.bits.mret_en   := decodedBundle(IsMret)
+  io.out.bits.ecall_en  := decodedBundle(IsEcall)
+  io.out.bits.csr_data  := io.csr.csrData
+  io.out.bits.csr_addr  :=  Mux(decodedBundle(IsMret),0x341.U(12.W),Mux(decodedBundle(CsrEn),inst(31, 20),0.U))
   io.out.bits.pc         := io.in.bits.pc // Pass the PC value from F2D to D2E
-
-
+  when(decodedBundle(IsEcall)){
+    io.csr.csrAddr := 0x305.U // Set CSR address for ecall
+  }
   io.in.ready := io.out.ready
   io.out.valid:=io.in.valid
   println(decodeTable, decodedBundle)

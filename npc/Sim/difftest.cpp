@@ -96,6 +96,7 @@ using DiffTestMemcpyFunc = void (*)(uint32_t addr, void *buf, uint32_t n, bool d
 using DiffTestRegcpyFunc = void (*)(void *dut, bool direction);
 using DiffTestExecFunc = void (*)(uint64_t n);
 using DiffTestRaiseIntrFunc = void (*)(uint64_t NO);
+using DiffTestSkip = void (*)();
 using DiffTestInitFunc = void (*)();
 
 // 差分测试方向枚举
@@ -109,6 +110,7 @@ static DiffTestMemcpyFunc ref_difftest_memcpy = nullptr;
 static DiffTestRegcpyFunc ref_difftest_regcpy = nullptr;
 static DiffTestExecFunc ref_difftest_exec = nullptr;
 static DiffTestRaiseIntrFunc ref_difftest_raise_intr = nullptr;
+static DiffTestSkip ref_difftest_skip = nullptr;
 
 // 检查寄存器状态是否匹配
 static bool checkRegs(const CPUState* ref_r, Vcore* core) {
@@ -233,7 +235,8 @@ void difftest_step(Vcore* core) {
     step_count++;
     
     if (!difftest::ref_difftest_memcpy) {
-        LogWarn("差分测试未初始化");
+
+       // LogWarn("差分测试未初始化");
         return;
     }
 

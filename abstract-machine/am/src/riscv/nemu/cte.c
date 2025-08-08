@@ -78,7 +78,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   memset(c, 0, sizeof(Context));
   c->mepc = (uintptr_t)entry;
   c->gpr[10] = (uintptr_t)arg; // a0
-  c->mstatus = 0x1800; 
+  c->mstatus = 0x21800; 
   return c;
 }
 

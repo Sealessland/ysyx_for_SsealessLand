@@ -34,13 +34,13 @@ public:
     void print_instruction_info(uint32_t inst_num, uint32_t from_pc, uint32_t to_pc, uint32_t instruction);
     void print_next_instruction(uint32_t pc, uint32_t instruction);
     void print_execution_summary(int executed, int total);
+    vluint64_t sim_time;   // 仿真时间
 
 
 private:
 
     Vcore* core;           // 核心模块实例
     VerilatedVcdC* tfp;    // 波形跟踪指针
-    vluint64_t sim_time;   // 仿真时间
 };
 
 #endif // CORE_EXE_H

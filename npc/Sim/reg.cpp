@@ -1,4 +1,6 @@
 #include "include/reg.h"
+
+#include <cstdint>
 #include <verilated.h>
 #include <Vcore.h>
 #include <Vcore___024root.h>
@@ -24,43 +26,74 @@ const char *regs[] = {
 void get_reg(Vcore* core) {
   // 必须通过 rootp 访问内部信号
   Vcore___024root* rootp = core->rootp;
-
   // 获取每个寄存器的值
-  gpr[0] = 0;  // x0 永远为 0
-  gpr[1] = rootp->core__DOT__rf__DOT__rf_1;   // ra
-  gpr[2] = rootp->core__DOT__rf__DOT__rf_2;   // sp
-  gpr[3] = rootp->core__DOT__rf__DOT__rf_3;   // gp
-  gpr[4] = rootp->core__DOT__rf__DOT__rf_4;   // tp
-  gpr[5] = rootp->core__DOT__rf__DOT__rf_5;   // t0
-  gpr[6] = rootp->core__DOT__rf__DOT__rf_6;   // t1
-  gpr[7] = rootp->core__DOT__rf__DOT__rf_7;   // t2
-  gpr[8] = rootp->core__DOT__rf__DOT__rf_8;   // s0
-  gpr[9] = rootp->core__DOT__rf__DOT__rf_9;   // s1
-  gpr[10] = rootp->core__DOT__rf__DOT__rf_10; // a0
-  gpr[11] = rootp->core__DOT__rf__DOT__rf_11; // a1
-  gpr[12] = rootp->core__DOT__rf__DOT__rf_12; // a2
-  gpr[13] = rootp->core__DOT__rf__DOT__rf_13; // a3
-  gpr[14] = rootp->core__DOT__rf__DOT__rf_14; // a4
-  gpr[15] = rootp->core__DOT__rf__DOT__rf_15; // a5
-  gpr[16] = rootp->core__DOT__rf__DOT__rf_16; // a6
-  gpr[17] = rootp->core__DOT__rf__DOT__rf_17; // a7
-  gpr[18] = rootp->core__DOT__rf__DOT__rf_18; // s2
-  gpr[19] = rootp->core__DOT__rf__DOT__rf_19; // s3
-  gpr[20] = rootp->core__DOT__rf__DOT__rf_20; // s4
-  gpr[21] = rootp->core__DOT__rf__DOT__rf_21; // s5
-  gpr[22] = rootp->core__DOT__rf__DOT__rf_22; // s6
-  gpr[23] = rootp->core__DOT__rf__DOT__rf_23; // s7
-  gpr[24] = rootp->core__DOT__rf__DOT__rf_24; // s8
-  gpr[25] = rootp->core__DOT__rf__DOT__rf_25; // s9
-  gpr[26] = rootp->core__DOT__rf__DOT__rf_26; // s10
-  gpr[27] = rootp->core__DOT__rf__DOT__rf_27; // s11
-  gpr[28] = rootp->core__DOT__rf__DOT__rf_28; // t3
-  gpr[29] = rootp->core__DOT__rf__DOT__rf_29; // t4
-  gpr[30] = rootp->core__DOT__rf__DOT__rf_30; // t5
-  gpr[31] = rootp->core__DOT__rf__DOT__rf_31; // t6
+ // gpr[0] 对应 regs[0] -> "$0"
+gpr[0] = 0;
+// gpr[1] 对应 regs[1] -> "ra" (x1)
+gpr[1] = rootp->core__DOT__rf__DOT__rf_1;
+// gpr[2] 对应 regs[2] -> "sp" (x2)
+gpr[2] = rootp->core__DOT__rf__DOT__rf_2;
+// gpr[3] 对应 regs[3] -> "gp" (x3)
+gpr[3] = rootp->core__DOT__rf__DOT__rf_3;
+// gpr[4] 对应 regs[4] -> "tp" (x4)
+gpr[4] = rootp->core__DOT__rf__DOT__rf_4;
+// gpr[5] 对应 regs[5] -> "t0" (x5)
+gpr[5] = rootp->core__DOT__rf__DOT__rf_5;
+// gpr[6] 对应 regs[6] -> "t1" (x6)
+gpr[6] = rootp->core__DOT__rf__DOT__rf_6;
+// gpr[7] 对应 regs[7] -> "t2" (x7)
+gpr[7] = rootp->core__DOT__rf__DOT__rf_7;
+// gpr[8] 对应 regs[8] -> "s0" (x8)
+gpr[8] = rootp->core__DOT__rf__DOT__rf_8;
+// gpr[9] 对应 regs[9] -> "s1" (x9)
+gpr[9] = rootp->core__DOT__rf__DOT__rf_9;
+// gpr[10] 对应 regs[10] -> "a0" (x10)
+gpr[10] = rootp->core__DOT__rf__DOT__rf_10;
+// gpr[11] 对应 regs[11] -> "a1" (x11)
+gpr[11] = rootp->core__DOT__rf__DOT__rf_11;
+// gpr[12] 对应 regs[12] -> "a2" (x12)
+gpr[12] = rootp->core__DOT__rf__DOT__rf_12;
+// gpr[13] 对应 regs[13] -> "a3" (x13)
+gpr[13] = rootp->core__DOT__rf__DOT__rf_13;
+// gpr[14] 对应 regs[14] -> "a4" (x14)
+gpr[14] = rootp->core__DOT__rf__DOT__rf_14;
+// gpr[15] 对应 regs[15] -> "a5" (x15)
+gpr[15] = rootp->core__DOT__rf__DOT__rf_15;
+// gpr[16] 对应 regs[16] -> "a6" (x16)
+gpr[16] = rootp->core__DOT__rf__DOT__rf_16;
+// gpr[17] 对应 regs[17] -> "a7" (x17)
+gpr[17] = rootp->core__DOT__rf__DOT__rf_17;
+// gpr[18] 对应 regs[18] -> "s2" (x18)
+gpr[18] = rootp->core__DOT__rf__DOT__rf_18;
+// gpr[19] 对应 regs[19] -> "s3" (x19)
+gpr[19] = rootp->core__DOT__rf__DOT__rf_19;
+// gpr[20] 对应 regs[20] -> "s4" (x20)
+gpr[20] = rootp->core__DOT__rf__DOT__rf_20;
+// gpr[21] 对应 regs[21] -> "s5" (x21)
+gpr[21] = rootp->core__DOT__rf__DOT__rf_21;
+// gpr[22] 对应 regs[22] -> "s6" (x22)
+gpr[22] = rootp->core__DOT__rf__DOT__rf_22;
+// gpr[23] 对应 regs[23] -> "s7" (x23)
+gpr[23] = rootp->core__DOT__rf__DOT__rf_23;
+// gpr[24] 对应 regs[24] -> "s8" (x24)
+gpr[24] = rootp->core__DOT__rf__DOT__rf_24;
+// gpr[25] 对应 regs[25] -> "s9" (x25)
+gpr[25] = rootp->core__DOT__rf__DOT__rf_25;
+// gpr[26] 对应 regs[26] -> "s10" (x26)
+gpr[26] = rootp->core__DOT__rf__DOT__rf_26;
+// gpr[27] 对应 regs[27] -> "s11" (x27)
+gpr[27] = rootp->core__DOT__rf__DOT__rf_27;
+// gpr[28] 对应 regs[28] -> "t3" (x28)
+gpr[28] = rootp->core__DOT__rf__DOT__rf_28;
+// gpr[29] 对应 regs[29] -> "t4" (x29)
+gpr[29] = rootp->core__DOT__rf__DOT__rf_29;
+// gpr[30] 对应 regs[30] -> "t5" (x30)
+gpr[30] = rootp->core__DOT__rf__DOT__rf_30;
+// gpr[31] 对应 regs[31] -> "t6" (x31)
+gpr[31] = rootp->core__DOT__rf__DOT__rf_31;
 
   // 获取 PC
-  pc = rootp->core__DOT__instfetch__DOT__pc;
+  pc =core->io_debugPC;
 
   // CSR 寄存器在提供的结构中不可见，暂时设为0
   for (int i = 0; i < 4; i++) {
@@ -87,21 +120,36 @@ void isa_reg_display(Vcore* core) {
   printf("dut-mepc = %#x\n", csr[2]);
   printf("dut-mcause = %#x\n", csr[3]);
 }
+uint32_t isa_reg_halt(bool *success)
+{*success = true;
+  return gpr[10];
 
+}
 // 根据字符串获取寄存器值
 uint32_t isa_reg_str2val(const char *s, bool *success) {
   *success = true;
+  const char *name = s;
+
+  // 如果名称以'$'开头，则跳过它
+  if (name[0] == '$') {
+    name++;
+  }
 
   // 检查是否为 PC
-  if (strcmp("pc", s+1) == 0) {
+  if (strcmp("pc", name) == 0) {
     return pc;
   }
 
   // 检查是否为通用寄存器
   for (int i = 0; i < REGNUM; i++) {
-    if (strcmp(regs[i], s+1) == 0) {
+    if (strcmp(regs[i], name) == 0) {
       return gpr[i];
     }
+  }
+
+  // 特殊处理 x0 的别名 "$0"
+  if (strcmp("0", name) == 0) {
+    return gpr[0];
   }
 
   *success = false;

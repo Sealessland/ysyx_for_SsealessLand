@@ -80,7 +80,6 @@ int cmd_info(char *args){
     printf("当前CPU状态:\n");
     printf("PC = 0x%08x\n", core->io_debugPC);
     printf("当前指令 = 0x%08x\n", core->io_debugInst);
-    printf("下一PC = 0x%08x\n", core->io_debugDNPC);
   }
   return 0;
 }
@@ -100,7 +99,7 @@ int cmd_si(char *args) {
 
   printf("单步执行 %d 步...\n", steps);
   for (int i = 0; i < steps; i++) {
-    g_executor->toggle_clock();
+    g_executor->run_insts(1);
   }
 
   // 执行完后显示状态
@@ -190,6 +189,10 @@ void sdb_mainloop() {
     }
 
     cmd_execute(line);
+    // 检查CPU状态，如果为STOP则退出mainloop
+    if (cpu_state.state == CPU_STATES::CPU_STOP) {
+      break;
+    }
     free(line);
   }
 }

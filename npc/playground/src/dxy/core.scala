@@ -74,7 +74,7 @@ class core extends Module {
   // Connect IF -> Decode
   decode.io.inst := instfetch.io.inst
 
-  // Connect Decode -> Register File (RF) Read Ports
+  // Connect Decode -> Register File (rf) Read Ports
   rf.io.rs1_addr := decode.io.rs1_addr
   rf.io.rs2_addr := decode.io.rs2_addr
 
@@ -91,7 +91,7 @@ class core extends Module {
   // Connect Execution (EXE) <-> Data Memory (DMEM in RAM)
   ram2r1w.io.dmem <> executer.io.dmem
 
-  // Connect Execution (EXE) -> Register File (RF) Write Port
+  // Connect Execution (EXE) -> Register File (rf) Write Port
   rf.io.rd_addr  := decode.io.rd_addr
   rf.io.rd_en    := decode.io.rd_en
   rf.io.rd_data  := executer.io.out

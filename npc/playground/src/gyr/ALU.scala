@@ -4,6 +4,30 @@ import chisel3.util._
 
 
 
+
+object AluFunc {
+  val SZ = 5
+  def NOP: UInt = "b00000".U(SZ.W)
+  def add: UInt = "b00001".U(SZ.W)
+  def sub: UInt = "b00010".U(SZ.W)
+  def mul: UInt = "b00011".U(SZ.W)
+  def div: UInt = "b00100".U(SZ.W)
+  def rem: UInt = "b00101".U(SZ.W)
+  def sge: UInt = "b00110".U(SZ.W) // rs1 >= rs2
+  def slt: UInt = "b00111".U(SZ.W) // rs1 < rs2
+  def equ: UInt = "b01000".U(SZ.W) // rs1 == rs2
+  def neq: UInt = "b01001".U(SZ.W) // rs1 != rs2
+  def and: UInt = "b01010".U(SZ.W)
+  def or:  UInt = "b01011".U(SZ.W)
+  def xor: UInt = "b01100".U(SZ.W)
+  def sll: UInt = "b01101".U(SZ.W)
+  def srl: UInt = "b01110".U(SZ.W)
+  def sra: UInt = "b01111".U(SZ.W)
+  def nand: UInt ="b10000".U(SZ.W)
+}
+object CsrFunc {
+
+}
 class AluIO extends Bundle{
   val in1 = Input(UInt(32.W))
   val in2 = Input(UInt(32.W))
@@ -32,7 +56,8 @@ class ALU extends Module {
   val logic_res = MuxLookup(io.opcode.asUInt, 0.U(32.W))(Seq(
     AluFunc.and.asUInt -> (io.in1 & io.in2),
     AluFunc.or.asUInt  -> (io.in1 | io.in2),
-    AluFunc.xor.asUInt -> (io.in1 ^ io.in2)
+    AluFunc.xor.asUInt -> (io.in1 ^ io.in2),
+    AluFunc.nand.asUInt -> (io.in1 & ~io.in2)
   )).asUInt
 
   // --- Group 4: Shifter Results (Combined into one signal) ---
@@ -68,6 +93,7 @@ class ALU extends Module {
     AluFunc.sra.asUInt -> shift_res,
     AluFunc.mul.asUInt -> mul_res,
     AluFunc.div.asUInt -> div_res,
-    AluFunc.rem.asUInt -> rem_res
+    AluFunc.rem.asUInt -> rem_res,
+    AluFunc.NOP.asUInt -> io.in1
   ))
 }

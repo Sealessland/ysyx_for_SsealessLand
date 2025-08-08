@@ -25,3 +25,6 @@ ysyx-framework/
 chisel-env/
 riscv-opcodes/
 rvdecoderdb/
+ysyxSoC/
+AdaptSim/
+

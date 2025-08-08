@@ -3,12 +3,17 @@
 //
 
 #include "include/core-exe.h"
+
+#include <algorithm>
+
 #include "include/disasm.h"  // 添加反汇编头文件
 #include <iostream>
 #include <iomanip>
 #include <Vcore.h>
 #include "verilated.h"
 #include<states.h>
+
+#include "include/difftest.h"
 #ifdef DIFFTEST
 #include "include/difftest.h"
 #endif
@@ -23,6 +28,8 @@
 #define ANSI_FG_WHITE   "\33[1;37m"
 #define ANSI_RESET      "\33[0m"
 #define ANSI_BOLD       "\33[1m"
+
+
 
 CoreExecutor::CoreExecutor() : core(nullptr), tfp(nullptr), sim_time(0) {}
 
@@ -52,7 +59,7 @@ bool CoreExecutor::initialize(const CoreConfig& cfg) {
     std::cout << ANSI_FG_YELLOW "🔄 执行复位周期..." ANSI_RESET << std::endl;
 #endif
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 20; i++) {
         toggle_clock();
     }
 
@@ -121,7 +128,7 @@ void CoreExecutor::toggle_clock() {
 
 #ifdef DIFFTEST
     // 每个时钟周期执行一次差分测试
-    difftest_step(core);
+   // only for single cycle difftest_step(core);
 #endif
 }
 
@@ -169,16 +176,9 @@ void CoreExecutor::print_instruction_info(uint32_t inst_num, uint32_t from_pc, u
     std::cout << "  " ANSI_FG_YELLOW "输入1:" ANSI_RESET "     " ANSI_FG_CYAN "0x" << std::setw(8) << std::setfill('0') 
               << core->io_debugin1 << ANSI_RESET << " │ " ANSI_FG_YELLOW "输入2:" ANSI_RESET "     " ANSI_FG_CYAN "0x" << std::setw(8) << std::setfill('0')
               << core->io_debugin2 << ANSI_RESET << std::endl;
+
     
-    // 调试信息第二行
-    std::cout << "  " ANSI_FG_YELLOW "立即数:" ANSI_RESET "     " ANSI_FG_CYAN "0x" << std::setw(8) << std::setfill('0') 
-              << core->io_debugImm << ANSI_RESET << " │ " ANSI_FG_YELLOW "分支:" ANSI_RESET "       ";
-    
-    if (core->io_debugBranch) {
-        std::cout << ANSI_FG_GREEN "跳转 ✓" ANSI_RESET << std::endl;
-    } else {
-        std::cout << ANSI_FG_RED "不跳转 ✗" ANSI_RESET << std::endl;
-    }
+
     
     std::cout << "╚═══════════════════════════════════════════════════════════════╝" << std::dec << std::endl;
 #endif
@@ -235,14 +235,19 @@ void CoreExecutor::run_insts(int insts) {
     std::cout << "└─────────────────────────────────────────────┘" << std::dec << std::endl;
 #endif
 
+
     while (executed_insts < insts && !Verilated::gotFinish()) {
         // 执行一个时钟周期
         toggle_clock();
-        
-        // 如果PC发生变化，认为一条指令执行完成
-        if (core->io_debugDNPC != current_pc) {
+
+         if (core->io_inst_done) {
             executed_insts++;
-            
+
+            difftest_step(core);
+             current_pc = core->io_debugPC;
+             current_inst = core->io_debugInst;
+            executed_insts++;
+            //difftest_step(core);
             if (cpu_state.state != CPU_STATES::CPU_RUNNING) {
 #ifdef ITRACE
                 std::cout << ANSI_FG_RED "❌ 执行中断：CPU状态异常，状态码: " << static_cast<int>(cpu_state.state) << ANSI_RESET << std::endl;
@@ -252,10 +257,8 @@ void CoreExecutor::run_insts(int insts) {
 
             // 显示详细的指令执行信息
             print_instruction_info(executed_insts, current_pc, core->io_debugPC, current_inst);
-            
             // 显示下一条指令预览
             print_next_instruction(core->io_debugPC, core->io_debugInst);
-
             // 更新当前PC和指令
             current_pc = core->io_debugPC;
             current_inst = core->io_debugInst;

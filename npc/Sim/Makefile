@@ -6,8 +6,8 @@ BUILD_DIR = build
 -include ../../Makefile
 
 # 条件编译选项
-DIFFTEST ?= 1  # 默认启用差分测试
-MTRACE ?= 1    # 默认禁用内存跟踪
+#DIFFTEST ?= 0  # 默认启用差分测试
+#MTRACE ?= 0    # 默认禁用内存跟踪
 #ITRACE ?= 0    # 默认禁用指令跟踪
 
 # 初始化基础CPPFLAGS
@@ -15,15 +15,14 @@ CPPFLAGS = -I$(VERILATOR_ROOT)/include \
            -I$(VERILATOR_ROOT)/include/vltstd \
            -I./include \
            -I./\
-           -I./v_model/
+           -I./v_model/\
+           -I./SoC_model/
 
 # 添加预处理器宏定义（这个部分有问题需要修复）
-CFLAGS = -DDIFFTEST
 
 CFLAGS +=
 
 
-CFLAGS += -DITRACE
 
 # 合并CFLAGS到CPPFLAGS
 CPPFLAGS += $(CFLAGS)
@@ -36,6 +35,7 @@ VERILATED_SRCS = $(VERILATOR_ROOT)/include/verilated.cpp \
                  $(VERILATOR_ROOT)/include/verilated_vcd_c.cpp \
                  $(VERILATOR_ROOT)/include/verilated_dpi.cpp
 VERILATOR_MODEL = v_model/Vcore__ALL.a
+VERILATOR_MODEL += SoC_model/VysyxSoCFull__ALL.a
 LDFLAGS = -lpthread -lreadline -g
 LDFLAGS += -lcapstone
 IMG ?=
@@ -59,10 +59,10 @@ $(BUILD_DIR)/%.o: %.cpp
 
 run: main
 	$(call git_commit, "run npc sim") # DO NOT REMOVE THIS LINE!!
-	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff ../../nemu/build/riscv32-nemu-interpreter-so  -m #TestBin/crc32-riscv32e-npc.bin
+	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff /home/sealessland/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so   -m /home/sealessland/ysyx-workbench/npc/Sim/a/rtthread-riscv32-nemu.bin
 run_nodiff: main
 	$(call git_commit, "run npc sim without difftest") # DO NOT REMOVE THIS LINE!!
-	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main
+	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main -m /home/sealessland/ysyx-workbench/npc/Sim/a/rtthread-riscv32e-npc.bin
 
 clean:
 	rm -f main
@@ -71,3 +71,19 @@ clean:
 debug: main
 	$(call git_commit, "debug npc sim") # DO NOT REMOVE THIS LINE!!
 	gdb ./main
+commit:
+	$(call git_commit, "commit npc sim") # DO NOT REMOVE THIS LINE!!
+
+runall: main
+	$(call git_commit, "run npc sim") # DO NOT REMOVE THIS LINE!!
+	@for test_bin in $(wildcard TestBin/*-npc.bin); do \
+		echo "===================================================="; \
+		echo "Running test: $$test_bin"; \
+		echo "===================================================="; \
+		LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff ../../nemu/build/riscv32-nemu-interpreter-so -nd -m $$test_bin; \
+		if [ $$? -ne 0 ]; then \
+			echo "Test $$test_bin FAILED!"; \
+			exit 1; \
+		fi \
+	done
+	@echo "All tests passed successfully!"

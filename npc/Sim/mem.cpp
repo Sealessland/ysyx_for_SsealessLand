@@ -136,6 +136,7 @@ bool Memory::load_from_file(const std::string& filename, uint32_t offset) {
 void Memory::load_default_image(uint32_t offset) {
     // RISC-V MMIO测试程序
     const uint32_t default_program[] = {
+
         // 初始化栈指针
         0x87fff137,  // lui sp, 0x87fff        # sp = 0x87fff000
         0xff010113,  // addi sp, sp, 0xff0     # sp = 0x87fff000 + 0xff0 = 0x87fffff0
@@ -237,4 +238,22 @@ extern "C" void data_mem_write(int addr, int len, int data)
     uint32_t physical_addr = static_cast<uint32_t>(addr);
     get_memory().write(physical_addr, static_cast<uint32_t>(len), static_cast<uint32_t>(data));
     std::cout << "数据内存write：addr=0x" << std::hex << addr << ", len=" << len << ", data=0x" << data << std::dec << std::endl;
+}
+
+// C-style interface for Verilator DPI-C
+extern "C" void memory_read(int addr, int* data) {
+    uint32_t read_val = get_memory().read(static_cast<uint32_t>(addr), 4);
+#ifdef  MTRACE
+    std::cout << "mem_read: addr=0x" << std::hex << addr << ", data=0x" << read_val << std::dec << std::endl;
+std::cout << "mem_read: addr=0x" << std::hex << addr << ", data=0x" << read_val << std::dec << std::endl;
+#endif
+    // 将读取的值存储到指针指向的内存中
+*data = read_val;
+}
+
+extern "C" void memory_write(int addr, int data ,int len) {
+#ifdef MTRACE
+    std::cout << "mem_write: addr=0x" << std::hex << addr << ", data=0x" << data << std::endl;
+#endif
+get_memory().write(static_cast<uint32_t>(addr), len, data);
 }
