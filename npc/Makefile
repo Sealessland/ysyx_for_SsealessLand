@@ -162,7 +162,8 @@ soc:
 		$(BUILD_DIR)/ysyx_23060321.sv \
 		$(PERIP_V_FILES) \
 		--Mdir $(SIM_DIR)/SoC_model \
-		--timescale "1ns/1ns" --no-timing
+		--timescale "1ns/1ns" --no-timing\
+		--autoflush
 	echo "编译 Verilator 模型..."
 	@$(MAKE) -C $(SIM_DIR)/SoC_model -f VysyxSoCFull.mk
 	echo "Verilator 模型生成完成"

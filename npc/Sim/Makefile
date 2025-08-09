@@ -6,10 +6,10 @@ BUILD_DIR = build
 -include ../../Makefile
 
 # 条件编译选项
-#DIFFTEST ?= 0  # 默认启用差分测试
-#MTRACE ?= 0    # 默认禁用内存跟踪
-#ITRACE ?= 0    # 默认禁用指令跟踪
-
+IFFTEST ?= 1  # 默认启用差分测试
+MTRACE ?= 1    # 默认禁用内存跟踪
+ITRACE ?= 1    # 默认禁用指令跟踪
+CORE ?= 1
 # 初始化基础CPPFLAGS
 CPPFLAGS = -I$(VERILATOR_ROOT)/include \
            -I$(VERILATOR_ROOT)/include/vltstd \
@@ -19,7 +19,7 @@ CPPFLAGS = -I$(VERILATOR_ROOT)/include \
            -I./SoC_model/
 
 # 添加预处理器宏定义（这个部分有问题需要修复）
-
+CPPFLAGS += -DCORE
 CFLAGS +=
 
 
