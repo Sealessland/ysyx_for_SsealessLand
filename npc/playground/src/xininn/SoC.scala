@@ -28,71 +28,126 @@ class ysyx_23060321 extends Module {
   slave.r.bits.rdata := 0.U
   slave.r.bits.rresp := 0.U
   slave.r.bits.rlast := false.B
-
-  // 状态机：持续向0x20000000发送AR请求
-  val s_idle :: s_wait_ready :: s_wait_response :: Nil = Enum(3)
-  val state = RegInit(s_idle)
-  // AR通道默认值（确保所有信号都有驱动）
-  master.ar.valid := false.B
-  master.ar.bits.arid    := 0.U
-  master.ar.bits.araddr  := 0.U
-  master.ar.bits.arlen   := 0.U
-  master.ar.bits.arsize  := 0.U
-  master.ar.bits.arburst := 0.U
-
-  // R通道默认值
-  master.r.ready := false.B
-  // 默认关闭写通道
-  master.aw.valid := false.B
-  master.aw.bits.awid    := 0.U
-  master.aw.bits.awaddr  := 0.U
-  master.aw.bits.awlen   := 0.U
-  master.aw.bits.awsize  := 0.U
-  master.aw.bits.awburst := 0.U
-  master.w.valid  := false.B
-  master.w.bits.wdata := 0.U
-  master.w.bits.wstrb := 0.U
-  master.w.bits.wlast := false.B
-  master.b.ready  := false.B
-
-  // AR通道状态机控制
-  switch(state) {
-    is(s_idle) {
-      // 发起AR请求到0x20000000
-      master.ar.valid := true.B
-      master.ar.bits.arid    := 1.U           // 设置ID为1
-      master.ar.bits.araddr  := 0x20000000.U  // 目标地址
-      master.ar.bits.arlen   := 0.U           // 单次传输 (len=0表示1个数据)
-      master.ar.bits.arsize  := 2.U           // 4字节传输 (2^2=4)
-      master.ar.bits.arburst := 1.U           // INCR突发类型
-
-      when(master.ar.fire) {
-        state := s_wait_response
-      }
-    }
-
-    is(s_wait_response) {
-      // 等待读响应
-      master.ar.valid := false.B
-      master.ar.bits.arid    := 0.U
-      master.ar.bits.araddr  := 0.U
-      master.ar.bits.arlen   := 0.U
-      master.ar.bits.arsize  := 0.U
-      master.ar.bits.arburst := 0.U
-      master.r.ready := true.B
-
-      when(master.r.fire) {
-        state := s_idle // 收到响应后立即发起下一次请求
-      }
-    }
-  }
-
-  // 当不在等待响应状态时，关闭r.ready
-  when(state =/= s_wait_response) {
-    master.r.ready := false.B
-  }
+  val ifu  = Module(new IFU)
+  val idu  = Module(new IDU)
+  val exu  = Module(new EXU)
+  val lsu  = Module(new LSU)
+  val wbu  = Module(new WBU)
+  val xbar = Module(new Xbar)
+  val rf   = Module(new RegFile)
+  ifu.io.axi<>xbar.io.IFin
+  lsu.io.axi<>xbar.io.LSin
+  xbar.io.out<>master
+  BusConn(ifu.io.out, idu.io.in)
+  BusConn(idu.io.out, exu.io.in)
+  BusConn(exu.io.out, lsu.io.in)
+  BusConn(lsu.io.out, wbu.io.in)
+  ifu.io.pcCtrl<>exu.io.pcCtrl
+  val csr = Module(new CSR)
+  idu.io.d2r<>rf.io.d2r
+  idu.io.r2e <>  rf.io.r2e
+  exu.io.csr<>csr.io
+  wbu.io.out<>rf.io.w2r
 }
+class core extends Module{
+  val io =IO(new Bundle {
+    val debugPC = Output(UInt(32.W)) // 用于调试的PC输出
+    val debugInst = Output(UInt(32.W)) // 用于调试
+    val inst_done = Output(Bool())
+  })
+  val ifu  = Module(new Fetch_v5)
+  val idu  = Module(new IDU)
+  val exu  = Module(new EXU)
+  val lsu  = Module(new LSU)
+  val wbu  = Module(new WBU)
+  val rf   = Module(new RegFile)
+  val csr = Module(new CSR)
 
-class simcore extends Module{
+  io.debugPC:=ifu.io.out.bits.pc
+  io.debugInst:=ifu.io.out.bits.inst
+  BusConn(ifu.io.out, idu.io.in)
+  BusConn(idu.io.out, exu.io.in)
+  BusConn(exu.io.out, lsu.io.in)
+  BusConn(lsu.io.out, wbu.io.in)
+  idu.io.d2r<>rf.io.d2r
+  idu.io.r2e <>  rf.io.r2e
+  exu.io.csr<>csr.io
+  wbu.io.out<>rf.io.w2r
+  ifu.io.pcCtrl<>exu.io.pcCtrl
+
+  val if_sram =Module(new SRAM)
+  val ls_sram =Module(new SRAM)
+
+  if_sram.io.ar.valid       := ifu.io.axi.ar.valid
+  if_sram.io.ar.bits.addr   := ifu.io.axi.ar.bits.araddr
+  ifu.io.axi.ar.ready       := if_sram.io.ar.ready
+  // AXI4 Master 输出的 arid, arlen, arsize, arburst 等信号被自动忽略
+
+  // --- 2. 读数据通道 (R: Slave -> Master) ---
+  ifu.io.axi.r.valid        := if_sram.io.r.valid
+  ifu.io.axi.r.bits.rdata   := if_sram.io.r.bits.data
+  ifu.io.axi.r.bits.rresp   := if_sram.io.r.bits.resp
+  if_sram.io.r.ready        := ifu.io.axi.r.ready
+  // 为 AXI4 Master 的额外输入提供默认值
+  ifu.io.axi.r.bits.rid     := 0.U(4.W) // AXI4-Lite 无ID，所以给0
+  ifu.io.axi.r.bits.rlast   := true.B   // AXI4-Lite 总是单次传输，所以每次都是最后一次
+
+  // --- IFU 的写通道 (如果存在) ---
+  // 通常 IFU 是只读的，但如果你的设计中它有写通道，需要悬空
+  ifu.io.axi.aw.ready := false.B // 表示Slave永远不准备好接收写地址
+  ifu.io.axi.w.ready  := false.B // 表示Slave永远不准备好接收写数据
+  if_sram.io.aw.bits.addr   := ifu.io.axi.aw.bits.awaddr
+  if_sram.io.aw.valid       := ifu.io.axi.aw.valid
+  if_sram.io.w.bits.data   :=0.U
+
+  if_sram.io.w.bits.strb   :=0.U
+  if_sram.io.w.valid       :=0.U
+  if_sram.io.b.ready       :=0.U
+  ifu.io.axi.b.valid  := false.B // 表示Slave永远没有写响应
+  ifu.io.axi.b.bits   := 0.U.asTypeOf(new AXIbChannel)
+
+
+  // =================================================================
+  // 连接 LSU (AXI4 Master) 到 ls_sram (AXI4-Lite Slave)
+  // LSU 有读写通道 (AR, R, AW, W, B)
+  // =================================================================
+
+  // --- 1. 读地址通道 (AR: Master -> Slave) ---
+  ls_sram.io.ar.valid       := lsu.io.axi.ar.valid
+  ls_sram.io.ar.bits.addr   := lsu.io.axi.ar.bits.araddr
+  lsu.io.axi.ar.ready       := ls_sram.io.ar.ready
+  // arid, arlen, arsize, arburst 被忽略
+
+  // --- 2. 读数据通道 (R: Slave -> Master) ---
+  lsu.io.axi.r.valid        := ls_sram.io.r.valid
+  lsu.io.axi.r.bits.rdata   := ls_sram.io.r.bits.data
+  lsu.io.axi.r.bits.rresp   := ls_sram.io.r.bits.resp
+  ls_sram.io.r.ready        := lsu.io.axi.r.ready
+  // 提供默认值
+  lsu.io.axi.r.bits.rid     := 0.U(4.W)
+  lsu.io.axi.r.bits.rlast   := true.B
+
+  // --- 3. 写地址通道 (AW: Master -> Slave) ---
+  ls_sram.io.aw.valid       := lsu.io.axi.aw.valid
+  ls_sram.io.aw.bits.addr   := lsu.io.axi.aw.bits.awaddr
+  lsu.io.axi.aw.ready       := ls_sram.io.aw.ready
+  // awid, awlen, awsize, awburst 被忽略
+
+  // --- 4. 写数据通道 (W: Master -> Slave) ---
+  ls_sram.io.w.valid        := lsu.io.axi.w.valid
+  ls_sram.io.w.bits.data    := lsu.io.axi.w.bits.wdata
+  ls_sram.io.w.bits.strb    := lsu.io.axi.w.bits.wstrb
+  lsu.io.axi.w.ready        := ls_sram.io.w.ready
+  // wlast 被忽略
+
+  // --- 5. 写响应通道 (B: Slave -> Master) ---
+  lsu.io.axi.b.valid        := ls_sram.io.b.valid
+  lsu.io.axi.b.bits.bresp   := ls_sram.io.b.bits.resp
+  ls_sram.io.b.ready        := lsu.io.axi.b.ready
+  // 提供默认值
+  val LS_reg =RegNext(lsu.io.axi.r.valid ||lsu.io.axi.w.valid, init = false.B)
+
+  lsu.io.axi.b.bits.bid     := 0.U(4.W) // AXI4-Lite 无ID，所以给0
+  io.inst_done := wbu.io.w2f.inst_done || LS_reg // 连接指令完成信号，包含 WBU 和 LSU 的状态
 
 }

@@ -2,7 +2,7 @@
 #include "mem.h"
 #include "include/mem.h"
 #include "include/device.h"
-
+#include "cassert"
 #include <fstream>
 #include <cstring>
 #include <iostream>
@@ -256,4 +256,20 @@ extern "C" void memory_write(int addr, int data ,int len) {
     std::cout << "mem_write: addr=0x" << std::hex << addr << ", data=0x" << data << std::endl;
 #endif
 get_memory().write(static_cast<uint32_t>(addr), len, data);
+}
+extern "C" void flash_read(int32_t addr, int32_t *data)
+{
+    std::cout << "flash_read: addr=0x" << std::hex << addr << std::dec << std::endl;
+
+    assert(0);
+}
+extern "C" void mrom_read(int32_t addr, int32_t *data)
+{   std::cout << "mrom_read: addr=0x" << std::hex << addr << std::dec << std::endl;
+    uint32_t read_val = get_memory().read(static_cast<uint32_t>(addr), 4);
+#ifdef  MTRACE
+    std::cout << "mem_read: addr=0x" << std::hex << addr << ", data=0x" << read_val << std::dec << std::endl;
+    std::cout << "mem_read: addr=0x" << std::hex << addr << ", data=0x" << read_val << std::dec << std::endl;
+#endif
+    // 将读取的值存储到指针指向的内存中
+    *data = read_val;
 }

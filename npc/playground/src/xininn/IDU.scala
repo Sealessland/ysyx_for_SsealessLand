@@ -59,6 +59,14 @@ object Opcode extends DecodeField[Insn,UInt]{
     case _       => BitPat(AluFunc.NOP)
   }
 }
+
+object unsigned extends BoolDecodeField[Insn]{
+  override def name: String = "unsigned"
+  override def genTable(i: Insn): BitPat = i.inst.name match {
+    case "lbu" | "lhu"  => y
+    case _ => n
+  }
+}
 object Mlen extends DecodeField[Insn, UInt] {
   override def name: String = "m_len"
 
@@ -67,7 +75,7 @@ object Mlen extends DecodeField[Insn, UInt] {
   override def genTable(i: Insn): BitPat = i.inst.name match {
     case "lb" | "lbu" => BitPat("b1000") // 8 bits
     case "lh" | "lhu" => BitPat("b1001") // 16 bits
-    case "lw"         => BitPat("b0010") // 32 bits
+    case "lw"         => BitPat("b1010") // 32 bits
     case "sb"         => BitPat("b1000") // 8 bits
     case "sh"         => BitPat("b1001") // 16 bits
     case "sw"         => BitPat("b1010") // 32 bits
@@ -297,10 +305,7 @@ object systeminst extends DecodeField[Insn,UInt]{
   }
 }
 
-class inst extends Bundle{
-  val inst = UInt(32.W)
-  val pc   = UInt(32.W)
-}
+
 class msg extends Bundle{
   val imm     = UInt(32.W)
   val alusel  = UInt(3.W)
@@ -319,12 +324,13 @@ class msg extends Bundle{
   val mlen     = UInt(3.W)
   val mem_en  = UInt(1.W)
   val mem_wr  = UInt(2.W)
+  val unsigned  = Bool()
 }
 
 
 class IDbundle extends Bundle{
   val out = Decoupled(new msg)
-  val in  = Flipped(Decoupled(new inst))
+  val in  = Flipped(Decoupled(new FDBus))
   val d2r = new D2R 
   val r2e = Flipped(new R2E)
 }
@@ -341,7 +347,7 @@ class IDU extends Module{
     .map(Insn(_))
     .toSeq
 
-  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, RdEn,systeminst,alusel,BranchEn,CsrEn,jump_en,Mlen,IsJalr,IsAuipc,IsEbreak,LsuEn,UnsignEn,Rs1En,Rs2En,IsMret,IsEcall,MwEn))
+  val decodeTable   = new DecodeTable(instList, Seq(Opcode, ImmType, RdEn,systeminst,alusel,BranchEn,CsrEn,jump_en,Mlen,IsJalr,IsAuipc,IsEbreak,LsuEn,UnsignEn,Rs1En,Rs2En,IsMret,IsEcall,MwEn,unsigned))
   val decodedBundle = decodeTable.decode(inst)
 
   val imm_i: UInt = Cat(Fill(52, inst(31)), inst(31, 20))                              // I-type
@@ -384,6 +390,7 @@ class IDU extends Module{
   io.out.bits.mem_wr    :=decodedBundle(MwEn)
   io.out.bits.mlen      :=decodedBundle(Mlen)(2,0)
   io.out.bits.mem_en    :=decodedBundle(Mlen)(3)
+  io.out.bits.unsigned  :=decodedBundle(unsigned)
   io.in.ready           := io.out.ready
   io.out.valid          :=io.in.valid
   println(decodeTable, decodedBundle)

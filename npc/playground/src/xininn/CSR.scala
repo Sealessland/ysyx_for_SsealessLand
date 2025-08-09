@@ -11,7 +11,7 @@ class csrBundle extends Bundle{
   val pc = Input(UInt(32.W))
   val pc_en = Input(Bool())
 }
-class csr extends Module{
+class CSR extends Module{
   val io = IO(new csrBundle)
 
   val MSTATUS = 0x300.U(12.W)
@@ -37,6 +37,7 @@ class csr extends Module{
   val mcycle = RegInit(0.U(32.W))
   val minstret = RegInit(0.U(32.W))
   val mcycleh = RegInit(0.U(32.W))
+  io.r_data := 0.U
   when(io.w_en){
     switch(io.w_addr){
       is(MSTATUS){

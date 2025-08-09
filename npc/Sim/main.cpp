@@ -18,7 +18,7 @@ CoreExecutor* g_executor = nullptr; // g_executor为调试器提供Core模型
 
 #ifdef SOC
 #include "include/SoC-exe.h"
-VysyxSoCFull* g_executor = nullptr; // g_executor为调试器提供SoC模型
+SoCExecutor* g_executor = nullptr; // g_executor为调试器提供SoC模型
 #endif
 
 int main(int argc, char** argv) {
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
         std::cerr << "初始化SoC执行器失败" << std::endl;
         return 1;
     }
-    g_executor = executor.get_soc(); // 正确赋值
+    g_executor = &executor;
 
     // SoC模式下difftest暂不兼容
     if (cfg.diff_test) {

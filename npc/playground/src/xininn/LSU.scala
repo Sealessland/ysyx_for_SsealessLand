@@ -2,167 +2,182 @@ package xininn
 
 import chisel3._
 import chisel3.util._
-import gyr.tool._
-import chisel3.experimental._
 import AXIUtils._
 
 // =============================================================================
-// IO Bundle Definitions
+// IO Bundle Definitions (LSU side)
 // =============================================================================
 class L2W extends Bundle{
-  val rd_en     = Bool()
-  val rd_addr   = UInt(5.W)
-  val rd_data   = UInt(32.W)
-  val ls_en     = Bool() // Load/Store Enable
+  val rd_en   = Bool()
+  val rd_addr = UInt(5.W)
+  val rd_data = UInt(32.W)
+  val ls_en   = Bool() // true when instruction bypassed LSU (non-memory)
 }
-
 
 class LSBus extends Bundle{
-  val in = Flipped(Decoupled(new E2L))
+  val in  = Flipped(Decoupled(new E2L))
   val out = Decoupled(new L2W)
-  val axi = (new AXI)
+  val axi = new AXI
 }
 
-// =============================================================================
-// Corrected Load/Save Module Implementation
-// =============================================================================
-//class LoadSave extends Module {
-//  val io = IO(new LSBus)
-//
-//  // --- 1. State Machine Definition ---
-//  val s_idle :: s_read_addr :: s_read_resp :: s_write_addr_data :: s_write_resp :: Nil = Enum(5)
-//  val state = RegInit(s_idle)
-//
-//  // --- 2. Register to hold instruction info during memory access ---
-//  val e2l_reg = Reg(new E2L)
-//
-//  // --- 3. AXI Signal Defaults ---
-//  drive_w_defaults(io.axi.w)
-//  drive_ar_defaults(io.axi.ar)
-//  drive_aw_defaults(io.axi.aw)
-//
-//  // --- 4. Write Data & Strobe Generation (Using switch) ---
-//  val strb = Wire(UInt(4.W))
-//  val wdata = Wire(UInt(32.W))
-//
-//  // 默认值
-//  strb := 0.U
-//  wdata := e2l_reg.wdata // 默认情况下 (如SW)，使用完整的写数据
-//
-//  // 使用 switch 语句替换 MuxLookup
-//  switch(e2l_reg.mlen) {
-//    is("b0001".U) { // Store Byte (SB)
-//      strb  := "b0001".U
-//      wdata := e2l_reg.wdata(7,0)
-//    }
-//    is("b0011".U) { // Store Half-word (SH)
-//      strb  := "b0010".U
-//      wdata := e2l_reg.mem_wdata(15,0)
-//    }
-//    is("b1111".U) { // Store Word (SW)
-//      strb  := "b0100".U
-//      // wdata 使用默认值
-//    }
-//  }
-//
-//  io.axi.w.bits.strb := strb
-//  io.axi.w.bits.data := wdata
-//
-//  // --- 5. Output Signal Defaults ---
-//  io.out.valid := false.B
-//  io.out.bits := DontCare
-//
-//  // --- 6. Core State Machine Logic (Corrected) ---
-//  io.in.ready := false.B // 默认不接收新指令
-//
-//  // 判断是否为非访存指令 (直通)
-//  val is_passthrough = io.in.valid && !io.in.bits.mem_ren && !io.in.bits.mem_wen
-//  io.out.bits.ls_en := is_passthrough
-//  switch(state) {
-//    is(s_idle) {
-//      when(is_passthrough) {
-//        // --- 直通逻辑 ---
-//        // 直接连接输入和输出
-//        io.out.valid := io.in.valid
-//        io.out.bits.rd_en   := io.in.bits.rd_en
-//        io.out.bits.rd_addr := io.in.bits.rd_addr
-//        io.out.bits.rd_data := io.in.bits.rd_data
-//
-//        // **关键修正**: ready信号直接由下游决定，打破环路
-//        io.in.ready := io.out.ready
-//        state := s_idle // 保持在空闲状态
-//      }.otherwise {
-//        // --- 访存或等待逻辑 ---
-//        io.in.ready := true.B
-//        when(io.in.fire) {
-//          e2l_reg := io.in.bits
-//          when(io.in.bits.mem_ren) {
-//            state := s_read_addr
-//          }.elsewhen(io.in.bits.mem_wen) {
-//            state := s_write_addr_data
-//          }
-//        }
-//      }
-//    }
-//
-//    is(s_read_addr) {
-//      io.axi.ar.valid := true.B
-//      when(io.axi.ar.fire) {
-//        state := s_read_resp
-//      }
-//    }
-//
-//    is(s_read_resp) {
-//      io.axi.r.ready := true.B
-//      when(io.axi.r.fire) {
-//        io.out.valid := true.B
-//        val rdata = io.axi.r.bits.data
-//        val addr_offset = e2l_reg.mem_addr(1,0)
-//        val final_data = Wire(UInt(32.W))
-//        final_data := 0.U // 默认值
-//
-//        final_data := MuxLookup(e2l_reg.mem_len, 0.U)(Seq(
-//          "b0001".U -> Mux(e2l_reg.unsign_en,
-//            Cat(Fill(24, 0.U), rdata(7,0)),        // unsigned: zero-extend
-//            Cat(Fill(24, rdata(7)), rdata(7,0))    // signed: sign-extend
-//          ),
-//          "b0011".U -> Mux(e2l_reg.unsign_en,
-//            Cat(Fill(16, 0.U), rdata(15,0)),       // unsigned: zero-extend
-//            Cat(Fill(16, rdata(15)), rdata(15,0))  // signed: sign-extend
-//          ),
-//          "b1111".U -> rdata  // lw (32-bit load)
-//        ))
-//
-//        io.out.bits.rd_en   := e2l_reg.rd_en
-//        io.out.bits.rd_addr := e2l_reg.rd_addr
-//        io.out.bits.rd_data := final_data
-//
-//        when(io.out.ready) {
-//          state := s_idle
-//        }
-//      }
-//    }
-//
-//    is(s_write_addr_data) {
-//      io.axi.aw.valid := true.B
-//      io.axi.w.valid  := true.B
-//      when(io.axi.aw.fire && io.axi.w.fire) {
-//        state := s_write_resp
-//      }
-//    }
-//
-//    is(s_write_resp) {
-//      io.axi.b.ready := true.B
-//      when(io.axi.b.fire) {
-//        io.out.valid := true.B
-//        io.out.bits.rd_en   := e2l_reg.rd_en
-//        io.out.bits.rd_addr := e2l_reg.rd_addr
-//        io.out.bits.rd_data := e2l_reg.rd_data
-//
-//        when(io.out.ready) {
-//          state := s_idle
-//        }
-//      }
-//    }
-//  }
-//}
+// Passive snapshot bundle for LSU register stage
+class E2LReg extends Bundle{
+  val rd_en   = Bool()
+  val rd_addr = UInt(5.W)
+  val rd_data = UInt(32.W)
+  val mem_en  = Bool()
+  val mem_wr  = UInt(2.W)
+  val mlen    = UInt(3.W)
+  val wdata   = UInt(32.W)
+  val maddr   = UInt(32.W)
+}
+
+class LSU extends Module {
+  val io = IO(new LSBus)
+
+  // --- 1. State Machine Definition ---
+  val sIdle :: sReadAddr :: sReadResp :: sWriteAddrData :: sWriteResp :: Nil = Enum(5)
+  val state = RegInit(sIdle)
+
+  // --- 2. Latch request ---
+  val e2l_reg = Reg(new E2LReg)
+
+  // --- 3. AXI defaults ---
+  drive_aw_defaults(io.axi.aw)
+  drive_w_defaults(io.axi.w)
+  drive_ar_defaults(io.axi.ar)
+  io.axi.r.ready := false.B
+  io.axi.b.ready := false.B
+
+  // --- 4. Output defaults ---
+  io.out.valid := false.B
+  io.out.bits  := 0.U.asTypeOf(io.out.bits)
+
+  // --- 5. Handshake default ---
+  io.in.ready := false.B
+
+  // 判断是否为非访存指令 (直通)
+  val isPassthrough = io.in.valid && !io.in.bits.mem_en
+  io.out.bits.ls_en := isPassthrough
+
+  switch(state) {
+    is(sIdle) {
+      when(isPassthrough) {
+        // 直通非访存指令
+        io.out.valid         := io.in.valid
+        io.out.bits.rd_en    := io.in.bits.rd_en
+        io.out.bits.rd_addr  := io.in.bits.rd_addr
+        io.out.bits.rd_data  := io.in.bits.rd_data
+        io.in.ready          := io.out.ready
+      }.otherwise {
+        io.in.ready := true.B
+        when(io.in.fire) {
+          e2l_reg.rd_en   := io.in.bits.rd_en
+          e2l_reg.rd_addr := io.in.bits.rd_addr
+          e2l_reg.rd_data := io.in.bits.rd_data
+          e2l_reg.mem_en  := io.in.bits.mem_en
+          e2l_reg.mem_wr  := io.in.bits.mem_wr
+          e2l_reg.mlen    := io.in.bits.mlen
+          e2l_reg.wdata   := io.in.bits.wdata
+          e2l_reg.maddr   := io.in.bits.maddr
+          when(io.in.bits.mem_en) {
+            when(io.in.bits.mem_wr === "b01".U) { // load
+              state := sReadAddr
+            }.elsewhen(io.in.bits.mem_wr === "b10".U) { // store
+              state := sWriteAddrData
+            }
+          }
+        }
+      }
+    }
+
+    // ---------------- Read Path ----------------
+    is(sReadAddr) {
+      io.axi.ar.valid          := true.B
+      io.axi.ar.bits.arid      := 0.U
+      io.axi.ar.bits.araddr    := e2l_reg.maddr
+      io.axi.ar.bits.arlen     := 0.U // single beat
+      io.axi.ar.bits.arsize    := e2l_reg.mlen // mlen 直接作为 size
+      io.axi.ar.bits.arburst   := 1.U // INCR
+      when(io.axi.ar.fire) { state := sReadResp }
+    }
+
+    is(sReadResp) {
+      io.axi.r.ready := true.B
+      when(io.axi.r.fire) {
+        val rdata = io.axi.r.bits.rdata
+        val off   = e2l_reg.maddr(1,0)
+        val size  = e2l_reg.mlen
+        val pad_sign = !io.in.bits.unsign_en
+        val finalData = Wire(UInt(32.W))
+        val loadByte  = (rdata >> (off * 8.U))(7,0)
+        val loadHalf  = Mux(off(1), rdata(31,16), rdata(15,0))
+        finalData := rdata
+        when(size === 0.U) {
+          // LB/LBU -> 8-bit, zero-extend
+          
+          finalData := Cat(Fill(24,pad_sign), loadByte)
+        }.elsewhen(size === 1.U) {      // LH/LHU -> 16-bit, zero-extend
+          finalData := Cat(Fill(16,pad_sign), loadHalf)
+        }.elsewhen(size === 2.U) {      // LW -> 32-bit
+          finalData := rdata
+        }
+
+        io.out.valid        := true.B
+        io.out.bits.rd_en   := e2l_reg.rd_en
+        io.out.bits.rd_addr := e2l_reg.rd_addr
+        io.out.bits.rd_data := finalData
+        when(io.out.ready) { state := sIdle }
+      }
+    }
+
+    // ---------------- Write Path ----------------
+    is(sWriteAddrData) {
+      // AW channel
+      io.axi.aw.valid          := true.B
+      io.axi.aw.bits.awid      := 0.U
+      io.axi.aw.bits.awaddr    := e2l_reg.maddr
+      io.axi.aw.bits.awlen     := 0.U // single beat
+      io.axi.aw.bits.awsize    := e2l_reg.mlen // mlen 直接作为 size
+      io.axi.aw.bits.awburst   := 1.U // INCR
+
+      // W channel with byte/half/word alignment
+      io.axi.w.valid           := true.B
+      val off   = e2l_reg.maddr(1,0)
+      val size  = e2l_reg.mlen
+      val wstrb = WireDefault(0.U(4.W))
+      val wdata = Wire(UInt(32.W))
+      wdata := 0.U
+      when(size === 0.U) { // SB
+        wstrb := (1.U(4.W) << off).asUInt
+        val byte = e2l_reg.wdata(7,0)
+        wdata := (byte << (off * 8.U)).asUInt
+      }.elsewhen(size === 1.U) { // SH
+        wstrb := Mux(off(1), "b1100".U, "b0011".U)
+        val half = e2l_reg.wdata(15,0)
+        wdata := Mux(off(1), (half << 16).asUInt, half)
+      }.elsewhen(size === 2.U) { // SW
+        wstrb := "b1111".U
+        wdata := e2l_reg.wdata
+      }
+      io.axi.w.bits.wstrb := wstrb
+      io.axi.w.bits.wdata := wdata
+      io.axi.w.bits.wlast := true.B
+
+      when(io.axi.aw.fire && io.axi.w.fire) {
+        state := sWriteResp
+      }
+    }
+
+    is(sWriteResp) {
+      io.axi.b.ready := true.B
+      when(io.axi.b.fire) {
+        io.out.valid        := true.B
+        io.out.bits.rd_en   := e2l_reg.rd_en
+        io.out.bits.rd_addr := e2l_reg.rd_addr
+        io.out.bits.rd_data := e2l_reg.rd_data
+        when(io.out.ready) { state := sIdle }
+      }
+    }
+  }
+}

@@ -38,20 +38,25 @@ bool SoCExecutor::initialize(const SoCConfig& cfg) {
     tfp = new VerilatedVcdC;
     soc->trace(tfp, 99);
     tfp->open(cfg.wave_file.c_str());
-
+#ifdef ITRACE
     std::cout << ANSI_BOLD ANSI_FG_GREEN "🚀 SoC仿真环境初始化完成" ANSI_RESET << std::endl;
     std::cout << ANSI_FG_CYAN "   └── 波形文件: " << cfg.wave_file << ANSI_RESET << std::endl;
 
     // 执行复位序列
     std::cout << ANSI_BOLD ANSI_FG_YELLOW "🔄 正在执行复位序列..." ANSI_RESET << std::endl;
-    for (int i = 0; i < 10; ++i) {
+#endif
+    for (int i = 0; i < 50; ++i) {
         toggle_clock();
     }
     soc->reset = 0; // 撤销复位信号
     toggle_clock(); // 再执行一个周期以使复位信号生效
 
     std::cout << ANSI_BOLD ANSI_FG_GREEN "✅ 复位完成" ANSI_RESET << std::endl;
-
+    for (int i = 0; i < 50; ++i)
+    {
+        toggle_clock();
+    }
+    std::cout<<"running test"<<std::endl;
     return true;
 }
 
@@ -96,13 +101,3 @@ void SoCExecutor::run_cycles(int cycles) {
     std::cout << ANSI_BOLD ANSI_FG_GREEN "✅ " << cycles << " 个周期执行完毕。" ANSI_RESET << std::endl;
 }
 
-extern "C" void flash_read(int32_t addr, int32_t *data)
-{
-    std::cout << "flash_read: addr=0x" << std::hex << addr << std::dec << std::endl;
-
-    assert(0);
-}
-extern "C" void mrom_read(int32_t addr, int32_t *data)
-{   std::cout << "mrom_read: addr=0x" << std::hex << addr << std::dec << std::endl;
-    *data = 0x12345678;
-}

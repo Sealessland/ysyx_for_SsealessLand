@@ -60,6 +60,11 @@ $(BUILD_DIR)/%.o: %.cpp
 run: main
 	$(call git_commit, "run npc sim") # DO NOT REMOVE THIS LINE!!
 	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff /home/sealessland/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so   -m /home/sealessland/ysyx-workbench/npc/Sim/a/rtthread-riscv32-nemu.bin
+perf: main
+	$(call git_commit, "run npc sim with perf") # DO NOT REMOVE THIS LINE!!
+	perf record
+	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main --diff /home/sealessland/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so   -m /home/sealessland/ysyx-workbench/npc/Sim/a/rtthread-riscv32-nemu.bin
+	perf report --stdio
 run_nodiff: main
 	$(call git_commit, "run npc sim without difftest") # DO NOT REMOVE THIS LINE!!
 	LD_PRELOAD=/usr/lib64/libasan.so.8 ./main -m /home/sealessland/ysyx-workbench/npc/Sim/a/rtthread-riscv32e-npc.bin

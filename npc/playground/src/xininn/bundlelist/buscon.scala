@@ -4,10 +4,22 @@ import chisel3._
 
 
 object BusConn {
-  def apply[T <: Data](producer: DecoupledIO[T], consumer: DecoupledIO[T], pipe: Boolean = true, flow: Boolean = true) = {
-    val q = Module(new Queue(chiselTypeOf(producer.bits), 1, pipe = pipe, flow = flow))
-    q.io.enq <> producer
-    consumer <> q.io.deq
+  def apply[T <: Data](producer: DecoupledIO[T], consumer: DecoupledIO[T],Sign:String ="slow") = {
+
+    consumer.valid := producer.valid
+    producer.ready := consumer.ready
+    if(Sign == "fast"){consumer.bits := producer.bits}
+    if(Sign == "slow") {
+      val queue = Module(new Queue(chiselTypeOf(producer.bits), 1))
+
+      // 将生产者连接到队列的入口 (enq)
+      queue.io.enq <> producer
+
+      // 将消费者连接到队列的出口 (deq)
+      consumer <> queue.io.deq
+    }
+
+    //consumer.bits := RegEnable(producer.bits, consumer.fire)
   }
 }
 object LSM {
