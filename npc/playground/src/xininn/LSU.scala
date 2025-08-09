@@ -108,14 +108,17 @@ class LSU extends Module {
         val rdata = io.axi.r.bits.rdata
         val off   = e2l_reg.maddr(1,0)
         val size  = e2l_reg.mlen
+        val pad_sign = !io.in.bits.unsign_en
         val finalData = Wire(UInt(32.W))
         val loadByte  = (rdata >> (off * 8.U))(7,0)
         val loadHalf  = Mux(off(1), rdata(31,16), rdata(15,0))
         finalData := rdata
-        when(size === 0.U) {            // LB/LBU -> 8-bit, zero-extend
-          finalData := Cat(0.U(24.W), loadByte)
+        when(size === 0.U) {
+          // LB/LBU -> 8-bit, zero-extend
+          
+          finalData := Cat(Fill(24,pad_sign), loadByte)
         }.elsewhen(size === 1.U) {      // LH/LHU -> 16-bit, zero-extend
-          finalData := Cat(0.U(16.W), loadHalf)
+          finalData := Cat(Fill(16,pad_sign), loadHalf)
         }.elsewhen(size === 2.U) {      // LW -> 32-bit
           finalData := rdata
         }

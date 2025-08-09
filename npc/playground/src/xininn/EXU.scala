@@ -12,6 +12,7 @@ class E2L extends Bundle{
   val mem_en = Input(Bool())
   val mem_wr = Input(UInt(2.W))
   val mlen  =  Input(UInt(3.W))
+  val unsign_en = Input(Bool())
   val wdata = Input(UInt(32.W))
   val maddr = UInt(32.W)
 }
@@ -79,6 +80,7 @@ alu.io.in2 := MuxLookup(io.in.bits.alusel, 0.U)(Seq(
   io.out.bits.wdata  :=io.in.bits.rs2data
   io.out.bits.mlen   := io.in.bits.mlen
   io.out.bits.mem_wr := io.in.bits.mem_wr
+  io.out.bits.unsign_en:=io.in.bits.unsigned
   io.out.valid := io.in.valid
   io.in.ready := io.out.ready
   io.out.valid := io.in.valid

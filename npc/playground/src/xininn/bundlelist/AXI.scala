@@ -213,11 +213,16 @@ object AXIUtils {
     ar.bits.arburst:= 1.U        // 突发类型为 INCR
     ar.bits.arid   := 0.U        // ID
   }
-  def inst_resp(r: DecoupledIO[AXIrChannel], data: UInt): Unit = {
+  def r_resp(r: DecoupledIO[AXIrChannel], data: UInt): Unit = {
     r.bits.rid := 0.U
     r.bits.rdata := data
     r.bits.rresp := 0.U
     r.bits.rlast := true.B
   }
-
+  def b_resp(b: DecoupledIO[AXIbChannel]): Unit = {
+    b.bits.bid := 0.U
+    b.bits.bresp := 0.U
+    b.valid := true.B
+    
+  }
 }
