@@ -297,10 +297,7 @@ object systeminst extends DecodeField[Insn,UInt]{
   }
 }
 
-class inst extends Bundle{
-  val inst = UInt(32.W)
-  val pc   = UInt(32.W)
-}
+
 class msg extends Bundle{
   val imm     = UInt(32.W)
   val alusel  = UInt(3.W)
@@ -324,7 +321,7 @@ class msg extends Bundle{
 
 class IDbundle extends Bundle{
   val out = Decoupled(new msg)
-  val in  = Flipped(Decoupled(new inst))
+  val in  = Flipped(Decoupled(new FDBus))
   val d2r = new D2R 
   val r2e = Flipped(new R2E)
 }

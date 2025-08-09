@@ -81,7 +81,8 @@ alu.io.in2 := MuxLookup(io.in.bits.alusel, 0.U)(Seq(
   io.out.bits.mem_wr := io.in.bits.mem_wr
   io.out.valid := io.in.valid
   io.in.ready := io.out.ready
-
+  io.out.valid := io.in.valid
+  io.in.ready  := io.out.ready
   val j_target = Wire(UInt(32.W))
   j_target := io.in.bits.imm+io.in.bits.pc
   when(io.in.bits.branch_en){
@@ -114,8 +115,23 @@ alu.io.in2 := MuxLookup(io.in.bits.alusel, 0.U)(Seq(
     io.csr.pc := io.in.bits.pc
     io.csr.pc_en := false.B
   }
-//when(io.in.bits.system === 16.U){
-//
-//}
+when(io.in.bits.system === 16.U){
+  io.csr.w_en := true.B
+  io.csr.w_addr:=0x341.U(12.W)
+  io.csr.w_data:=0xb.U(32.W)
+  io.csr.pc_en := true.B
+  io.csr.pc := io.in.bits.pc
+  io.csr.r_en := true.B
+  io.csr.r_addr:=0x305.U(12.W)
+  io.pcCtrl.pc_en := true.B
+  io.pcCtrl.dnpc := io.csr.r_data
+  io.out.bits.rd_en  := false.B
+  io.out.bits.mem_en := false.B
+  io.out.bits.maddr  := 0.U
+  io.out.bits.wdata  := 0.U
+  io.out.bits.mlen   := 0.U
+  io.out.bits.mem_wr := 0.U
+
+}
 
 }

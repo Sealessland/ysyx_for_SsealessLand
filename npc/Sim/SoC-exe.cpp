@@ -44,7 +44,7 @@ bool SoCExecutor::initialize(const SoCConfig& cfg) {
 
     // 执行复位序列
     std::cout << ANSI_BOLD ANSI_FG_YELLOW "🔄 正在执行复位序列..." ANSI_RESET << std::endl;
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 50; ++i) {
         toggle_clock();
     }
     soc->reset = 0; // 撤销复位信号

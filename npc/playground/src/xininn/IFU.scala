@@ -6,9 +6,13 @@ import chisel3.DontCare.:=
 
 import scala.collection.immutable
 import xininn.utils._
+
+class W2F extends Bundle {
+  val inst_done = Bool()
+}
 class pcCtrl extends Bundle{
   val dnpc = Input(UInt(32.W))
-  val pcSrc = Input(Bool())
+  val pc_en = Input(Bool())
 }
 class FDBus extends Bundle {
   val inst = Output(UInt(32.W)) // Instruction fetched from memory
@@ -37,7 +41,7 @@ class IFU extends Module {
   inst_buffer.io.enq.bits(0) := 0.U
   inst_buffer.io.enq.bits(1) := 0.U
   inst_buffer.io.enq.valid := false.B
-  val pc = RegInit("h80000000".U(32.W)) // Initialize PC to a specific address
+  val pc = RegInit("h20000000".U(32.W)) // Initialize PC to a specific address
   val inst = RegInit(0.U(32.W)) // Register to hold the fetched instruction
   val s_idle :: s_fetching :: s_jump :: s_wait :: Nil = Enum(4)
   val state = RegInit(s_idle)
@@ -66,9 +70,9 @@ class IFU extends Module {
 
   // 完备的 valid 驱动逻辑 (单行版本)
   // 输出有效 = 队列非空 AND 没有跳转
-  io.out.valid := inst_buffer.io.deq.valid && !io.pcCtrl.pcSrc
+  io.out.valid := inst_buffer.io.deq.valid && !io.pcCtrl.pc_en
 
-when(io.pcCtrl.pcSrc){
+when(io.pcCtrl.pc_en){
   inst_buffer.flush:=true.B
   pc := io.pcCtrl.dnpc
   io.axi.ar.bits.arid:=1.U
