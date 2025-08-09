@@ -36,7 +36,7 @@ class IFU extends Module {
   io.axi.ar.bits.araddr :=0.U
   io.axi.ar.bits.arburst:=1.U
   io.axi.ar.valid:=false.B
-  io.axi.r.ready:= !inst_buffer.io.enq.ready
+  io.axi.r.ready:= inst_buffer.io.enq.ready
   inst_buffer.flush:= false.B
   inst_buffer.io.enq.bits(0) := 0.U
   inst_buffer.io.enq.bits(1) := 0.U

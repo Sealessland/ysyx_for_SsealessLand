@@ -3,15 +3,24 @@
 #include "include/mem.h"
 #include "include/core-exe.h"
 #include <Vcore.h>
+#include <VysyxSoCFull.h>
 #include<states.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <string.h>
+#include "include/SoC-exe.h"
 #include <regex>
 #include <reg.h>
+#define SOC 1
+#ifdef CORE
 extern CoreExecutor* g_executor; // 全局执行器指针，需要在主程序中声明
+#endif
+#ifdef SOC
+extern SoCExecutor* g_executor ; // g_executor为调试器提供SoC模型
+
+#endif
 
 // 命令表
 static sdb_cmd_t cmd_table[] = {
@@ -50,7 +59,12 @@ int cmd_c(char *args) {
   // 这里可以实现执行到下一个断点或者执行指定周期数
   // 暂时简单实现为执行100个周期
   cpu_state.state=CPU_STATES::CPU_RUNNING;
+#ifdef CORE
   g_executor->run_insts(999999);
+#endif
+#ifdef SOC
+  g_executor->run_cycles(999999);
+#endif
   return 0;
 }
 
@@ -66,13 +80,17 @@ int cmd_q(char *args) {
 
 // 打印寄存器状态
 int cmd_info(char *args){
-  if (g_executor == nullptr || g_executor->get_core() == nullptr) {
+  if (g_executor == nullptr || g_executor->get_model() == nullptr) {
     printf("错误: 执行器未初始化\n");
     return -1;
   }
-
+#ifdef CORE
   Vcore* core = g_executor->get_core();
-
+#endif
+#ifdef SOC
+  VysyxSoCFull* soc = g_executor->get_model();
+#endif
+#ifndef SOC
   if (args != nullptr && strcmp(args, "r") == 0) {
     printf("所有寄存器状态:\n");
     printAllRegs(core); // 调用 printAllRegs 函数
@@ -81,6 +99,8 @@ int cmd_info(char *args){
     printf("PC = 0x%08x\n", core->io_debugPC);
     printf("当前指令 = 0x%08x\n", core->io_debugInst);
   }
+#endif
+
   return 0;
 }
 
@@ -99,7 +119,12 @@ int cmd_si(char *args) {
 
   printf("单步执行 %d 步...\n", steps);
   for (int i = 0; i < steps; i++) {
+#ifdef CORE
     g_executor->run_insts(1);
+#endif
+#ifdef SOC
+    g_executor->run_cycles(1);
+#endif
   }
 
   // 执行完后显示状态
