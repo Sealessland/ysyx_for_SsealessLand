@@ -1,5 +1,6 @@
 package gyr
 
+import chisel3.Module.clock
 import chisel3._
 import chisel3.util.HasBlackBoxInline
 
@@ -26,4 +27,12 @@ class ebreak extends BlackBox with HasBlackBoxInline {
       |
       |endmodule
     """.stripMargin)
+}
+
+object breakhandler {
+  def apply(): Unit = {
+    val ebreak = Module(new ebreak)
+    ebreak.io.clock := clock
+    ebreak.io.en := true.B
+  }
 }

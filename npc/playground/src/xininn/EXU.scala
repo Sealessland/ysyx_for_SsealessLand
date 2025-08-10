@@ -133,7 +133,12 @@ when(io.in.bits.system === 16.U){
   io.out.bits.wdata  := 0.U
   io.out.bits.mlen   := 0.U
   io.out.bits.mem_wr := 0.U
-
+}.elsewhen(io.in.bits.system === 1.U){
+  breakhandler(true.B,clock = clock)
+}.elsewhen(io.in.bits.system === 2.U){
+  io.csr.r_en := true.B
+  io.csr.r_addr:=0x341.U(12.W)
+  io.pcCtrl.pc_en := true.B
+  io.pcCtrl.dnpc := io.csr.r_data
 }
-
 }

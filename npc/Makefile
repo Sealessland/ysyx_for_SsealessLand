@@ -19,7 +19,7 @@ verilog:
 	mkdir -p $(BUILD_DIR)
 	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
 	head -n -3 build/core.sv > build/core.sv.tmp && mv build/core.sv.tmp build/core.sv
-
+	head -n -3 build/ysyx_23060321.sv > build/ysyx_23060321.sv.tmp && mv build/ysyx_23060321.sv.tmp build/ysyx_23060321.sv
 help:
 	mill -i $(PRJ).runMain Elaborate --help
 
@@ -150,11 +150,18 @@ PERIP_V_FILES = $(shell find ysyxSoC/perip -name "*.v")
 
 
 
+# 推荐使用一个变量来控制并行度
+# 你可以在命令行覆盖它，例如: make soc -j14
+# 或者在这里设置默认值
+NUM_CORES ?= 14
+
 soc:
 	$(call git_commit, "gen verilator model for SoC")
 	echo "生成 Verilator 模型..."
 	mkdir -p $(SIM_DIR)/SoC_model
-	verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal \
+
+	# 步骤 4: Verilator 增加 --threads 选项
+	verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal  \
 		--top-module ysyxSoCFull \
 		+incdir+ysyxSoC/perip/uart16550/rtl \
 		+incdir+ysyxSoC/perip/spi/rtl \
@@ -163,7 +170,12 @@ soc:
 		$(PERIP_V_FILES) \
 		--Mdir $(SIM_DIR)/SoC_model \
 		--timescale "1ns/1ns" --no-timing\
-		--autoflush
-	echo "编译 Verilator 模型..."
-	@$(MAKE) -C $(SIM_DIR)/SoC_model -f VysyxSoCFull.mk
+		--autoflush \
+		--threads $(NUM_CORES) # <-- 新增：让 Verilator 内部并行
+
+	echo "编译 Verilator 模型 (使用 $(NUM_CORES) 个核心)..."
+
+	# 步骤 6: make 增加 -j 选项
+	@$(MAKE) -j$(NUM_CORES) -C $(SIM_DIR)/SoC_model -f VysyxSoCFull.mk # <-- 修改：并行编译 C++
+
 	echo "Verilator 模型生成完成"
