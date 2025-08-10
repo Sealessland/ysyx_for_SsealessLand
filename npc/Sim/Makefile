@@ -19,7 +19,7 @@ CPPFLAGS = -I$(VERILATOR_ROOT)/include \
            -I./SoC_model/
 
 # 添加预处理器宏定义（这个部分有问题需要修复）
-CPPFLAGS += -DCORE
+CPPFLAGS += -DCORE -DITRACE
 CFLAGS +=
 
 

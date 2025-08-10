@@ -28,7 +28,7 @@ class ysyx_23060321 extends Module {
   slave.r.bits.rdata := 0.U
   slave.r.bits.rresp := 0.U
   slave.r.bits.rlast := false.B
-  val ifu  = Module(new IFU)
+  val ifu  = Module(new Fetch_v5)
   val idu  = Module(new IDU)
   val exu  = Module(new EXU)
   val lsu  = Module(new LSU)
@@ -48,7 +48,14 @@ class ysyx_23060321 extends Module {
   idu.io.r2e <>  rf.io.r2e
   exu.io.csr<>csr.io
   wbu.io.out<>rf.io.w2r
+  val inst_done = Wire(Bool())
+  val LS_reg =RegNext(lsu.io.axi.r.valid ||lsu.io.axi.b.valid, init = false.B)
+  inst_done := wbu.io.w2f.inst_done || LS_reg // 连接指令完成信号，包含 WBU 和 LSU 的状态
+  InstCounter(inst_done,clock = clock)
 }
+
+
+
 class core extends Module{
   val io =IO(new Bundle {
     val debugPC = Output(UInt(32.W)) // 用于调试的PC输出
@@ -63,7 +70,7 @@ class core extends Module{
   val rf   = Module(new RegFile)
   val csr = Module(new CSR)
 
-  io.debugPC:=ifu.io.out.bits.pc
+  io.debugPC:=ifu.io.pc
   io.debugInst:=ifu.io.out.bits.inst
   BusConn(ifu.io.out, idu.io.in)
   BusConn(idu.io.out, exu.io.in)
@@ -146,8 +153,7 @@ class core extends Module{
   ls_sram.io.b.ready        := lsu.io.axi.b.ready
   // 提供默认值
   val LS_reg =RegNext(lsu.io.axi.r.valid ||lsu.io.axi.w.valid, init = false.B)
-
+  io.inst_done:=LS_reg||wbu.io.w2f.inst_done
   lsu.io.axi.b.bits.bid     := 0.U(4.W) // AXI4-Lite 无ID，所以给0
-  io.inst_done := wbu.io.w2f.inst_done || LS_reg // 连接指令完成信号，包含 WBU 和 LSU 的状态
 
 }

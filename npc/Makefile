@@ -17,7 +17,7 @@ test:
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
-	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
+	mill -i -j 8 $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
 	head -n -3 build/core.sv > build/core.sv.tmp && mv build/core.sv.tmp build/core.sv
 	head -n -3 build/ysyx_23060321.sv > build/ysyx_23060321.sv.tmp && mv build/ysyx_23060321.sv.tmp build/ysyx_23060321.sv
 help:

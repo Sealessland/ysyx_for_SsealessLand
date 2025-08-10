@@ -49,10 +49,10 @@ static void print_difftest_step_start(int step_count);
 static void print_current_pc(uint32_t pc);
 static void print_sync_dut_state();
 static void print_pc_mismatch(uint32_t ref_pc, uint32_t dut_pc);
-static void print_register_mismatches(const std::vector<int>& mismatch_regs, 
+static void print_register_mismatches(const std::vector<int>& mismatch_regs,
                                      const uint32_t* ref_gpr, const uint32_t* dut_gpr);
 static void print_difftest_success();
-static void print_complete_state_comparison(uint32_t ref_pc, uint32_t dut_pc, 
+static void print_complete_state_comparison(uint32_t ref_pc, uint32_t dut_pc,
                                           const uint32_t* ref_gpr, const uint32_t* dut_gpr);
 static void print_difftest_failure();
 
@@ -106,6 +106,7 @@ enum DiffTestDirection {
 };
 
 // 函数指针
+
 static DiffTestMemcpyFunc ref_difftest_memcpy = nullptr;
 static DiffTestRegcpyFunc ref_difftest_regcpy = nullptr;
 static DiffTestExecFunc ref_difftest_exec = nullptr;
@@ -201,6 +202,12 @@ bool difftest_init(const char* so_file, Vcore* core) {
         LogError("无法找到 difftest_raise_intr 函数");
         return false;
     }
+    difftest::ref_difftest_skip = reinterpret_cast<difftest::DiffTestSkip>(
+        dlsym(handle, "difftest_skip"));
+    if (!difftest::ref_difftest_skip) {
+        LogError("无法找到 difftest_skip 函数");
+        return false;
+    }
 
     auto ref_difftest_init = reinterpret_cast<difftest::DiffTestInitFunc>(
         dlsym(handle, "difftest_init"));
@@ -233,14 +240,14 @@ bool difftest_init(const char* so_file, Vcore* core) {
 void difftest_step(Vcore* core) {
     static int step_count = 0;
     step_count++;
-    
+
     if (!difftest::ref_difftest_memcpy) {
 
        // LogWarn("差分测试未初始化");
         return;
     }
 
-    
+
     print_difftest_step_start(step_count);
 
     // 先获取DUT当前状态
@@ -339,15 +346,15 @@ static void print_pc_mismatch(uint32_t ref_pc, uint32_t dut_pc) {
     printf("└─────────────────────────────────┘\n");
 }
 
-static void print_register_mismatches(const std::vector<int>& mismatch_regs, 
+static void print_register_mismatches(const std::vector<int>& mismatch_regs,
                                      const uint32_t* ref_gpr, const uint32_t* dut_gpr) {
     printf(ANSI_BG_RED ANSI_FG_WHITE " ❌ 寄存器不匹配 " ANSI_RESET "\n");
     for (int i : mismatch_regs) {
         printf("┌─────────────────────────────────────────────┐\n");
         printf("│ " ANSI_FG_CYAN "寄存器 %s" ANSI_RESET " 不匹配                    │\n", regs[i]);
-        printf("│ " ANSI_FG_YELLOW "参考值" ANSI_RESET " = " ANSI_FG_GREEN "0x%08x" ANSI_RESET " (%d)          │\n", 
+        printf("│ " ANSI_FG_YELLOW "参考值" ANSI_RESET " = " ANSI_FG_GREEN "0x%08x" ANSI_RESET " (%d)          │\n",
                ref_gpr[i], (int32_t)ref_gpr[i]);
-        printf("│ " ANSI_FG_YELLOW "DUT值 " ANSI_RESET " = " ANSI_FG_RED "0x%08x" ANSI_RESET " (%d)          │\n", 
+        printf("│ " ANSI_FG_YELLOW "DUT值 " ANSI_RESET " = " ANSI_FG_RED "0x%08x" ANSI_RESET " (%d)          │\n",
                dut_gpr[i], (int32_t)dut_gpr[i]);
         printf("└─────────────────────────────────────────────┘\n");
     }
@@ -357,24 +364,24 @@ static void print_difftest_success() {
     printf(ANSI_FG_GREEN "✅ 差分测试通过" ANSI_RESET "\n");
 }
 
-static void print_complete_state_comparison(uint32_t ref_pc, uint32_t dut_pc, 
+static void print_complete_state_comparison(uint32_t ref_pc, uint32_t dut_pc,
                                           const uint32_t* ref_gpr, const uint32_t* dut_gpr) {
     printf("\n" ANSI_BOLD "════════════════ 完整状态对比 ════════════════" ANSI_RESET "\n");
-    
+
     // PC对比
     printf(ANSI_FG_YELLOW "PC状态:" ANSI_RESET "\n");
     printf("  参考PC = " ANSI_FG_GREEN "0x%08x" ANSI_RESET "\n", ref_pc);
     printf("  DUT PC = " ANSI_FG_RED "0x%08x" ANSI_RESET "\n", dut_pc);
-    
+
     printf("\n" ANSI_FG_YELLOW "寄存器状态:" ANSI_RESET "\n");
     printf("┌──────┬──────────────┬──────────────┬────────┐\n");
     printf("│ 寄存器 │    参考值      │    DUT值     │  状态  │\n");
     printf("├──────┼──────────────┼──────────────┼────────┤\n");
-    
+
     for (int i = 0; i < REGNUM; i++) {
         const char* status_color = (ref_gpr[i] == dut_gpr[i]) ? ANSI_FG_GREEN : ANSI_FG_RED;
         const char* status_text = (ref_gpr[i] == dut_gpr[i]) ? "  ✓   " : "  ✗   ";
-        
+
         printf("│ %-4s │ " ANSI_FG_CYAN "0x%08x" ANSI_RESET " │ " ANSI_FG_CYAN "0x%08x" ANSI_RESET " │ %s%s" ANSI_RESET " │\n",
                regs[i], ref_gpr[i], dut_gpr[i], status_color, status_text);
     }
