@@ -54,9 +54,11 @@ __EXPORT bool difftest_checkmem(paddr_t addr, int len, word_t dut_data, bool is_
     return ref_data == dut_data;
   }
 }
-__EXPORT void difftest_skip(uint64_t n) {
-  // 跳过n条指令
-  cpu.pc+=4;
+__EXPORT bool difftest_skip() {
+  extern bool skip;
+  bool skip_temp = skip;
+  skip = false;
+  return skip_temp;
 }
 __EXPORT void difftest_init() {
   void init_mem();

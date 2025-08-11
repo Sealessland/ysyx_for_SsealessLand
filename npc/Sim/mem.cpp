@@ -7,7 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include <map>
-
+#include "include/difftest.h"
 #ifdef DIFFTEST
 #include "include/difftest.h"
 #endif
@@ -70,6 +70,7 @@ uint32_t Memory::read(uint32_t addr, uint32_t len) {
 
 // 内存写入函数 - 支持MMIO
 void Memory::write(uint32_t addr, uint32_t len, uint32_t value) {
+
     if (len > 4) {
         printf("错误：不支持大于4字节的内存写入 addr=0x%08x, len=%d\n", addr, len);
         return;
@@ -77,6 +78,11 @@ void Memory::write(uint32_t addr, uint32_t len, uint32_t value) {
 
     // 检查是否为MMIO地址
     if (is_mmio_addr(addr)) {
+#ifdef DIFFTEST
+        std::cout << "MMIO写入地址: 0x" << std::hex << addr << "，数据: 0x" << value << std::dec << std::endl;
+        difftest_skip();
+        std::cout << "SKIP happened" << std::endl;
+#endif
         mmio_write(addr, len, value);
 #ifdef MTRACE
         printf("MMIO写入：addr=0x%08x, len=%d, data=0x%08x\n", addr, len, value);

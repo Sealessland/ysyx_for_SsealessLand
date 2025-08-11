@@ -4,7 +4,7 @@ import chisel3._
 
 
 object BusConn {
-  def apply[T <: Data](producer: DecoupledIO[T], consumer: DecoupledIO[T],Sign:String ="fast") = {
+  def apply[T <: Data](producer: DecoupledIO[T], consumer: DecoupledIO[T],Sign:String ="slow") = {
 
     consumer.valid := producer.valid
     producer.ready := consumer.ready

@@ -1,5 +1,6 @@
 
 import te._
+import gyr._
 import xininn._
 object Elaborate extends App {
   val firtoolOptions = Array(
@@ -19,8 +20,7 @@ object Elaborate extends App {
   circt.stage.ChiselStage.emitSystemVerilogFile(new EXU, args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new LSU, args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new  WBU, args ,firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new core, args ,firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new RegFile, args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new gyr.core, args ,firtoolOptions)
   //circt.stage.ChiselStage.emitSystemVerilogFile(new test(), args, firtoolOptions)
  // circt.stage.ChiselStage.emitSystemVerilogFile(new Decode, args, firtoolOptions)
 

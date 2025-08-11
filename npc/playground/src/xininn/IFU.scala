@@ -23,101 +23,90 @@ class FDBus extends Bundle {
 
 class Fetch_v5 extends Module {
   val io = IO(new Bundle {
-    val out = Decoupled(new FDBus) // 输出到译码阶段
-    val axi = new AXI // 完整的 AXI4 接口
-    val pcCtrl = new pcCtrl // 跳转控制接口
+    val out = Decoupled(new FDBus)
+    val axi = new AXI
+    val pcCtrl = new pcCtrl
     val pc = Output(UInt(32.W))
   })
 
-
-  io.axi.aw.valid := false.B
-  io.axi.aw.bits.awid := 0.U
-  io.axi.aw.bits.awaddr := 0.U
-  io.axi.aw.bits.awlen := 0.U
-  io.axi.aw.bits.awsize := 0.U
-  io.axi.aw.bits.awburst := 0.U
-
-  io.axi.w.valid := false.B
-  io.axi.w.bits.wdata := 0.U
-  io.axi.w.bits.wstrb := 0.U
-  io.axi.w.bits.wlast := false.B
-
+  // --- AXI 写通道的默认连接 (保持不变) ---
+  io.axi.aw := DontCare
+  io.axi.w  := DontCare
   io.axi.b.ready := false.B
+
   val pc = RegInit("h80000000".U(32.W))
-
-  // --- AXI 读通道默认信号 ---
-  io.axi.ar.valid := false.B
-  io.axi.ar.bits.araddr := pc
-  // 为 AXI4 新增的信号提供固定的、符合单次读操作的默认值
-  io.axi.ar.bits.arid := 0.U // 事务ID，固定为0
-  io.axi.ar.bits.arlen := 0.U // 突发长度为1 (0表示1拍)
-  io.axi.ar.bits.arsize := 2.U // 传输大小为4字节 (2^2)
-  io.axi.ar.bits.arburst := 1.U // INCR burst type
-
-  io.axi.r.ready := false.B
-
-
-  // ---------------------------------------------------------------------------
-  //  3. 核心控制逻辑 (逻辑不变)
-  // ---------------------------------------------------------------------------
-
-  val inst = RegInit(0.U(32.W))
-  // 单项指令缓冲
   io.pc := pc
 
-  // 建议使用两状态状态机
   val s_idle :: s_busy :: Nil = Enum(2)
   val state = RegInit(s_idle)
 
-  // -- 输出逻辑 --
-  // 仅在 s_busy 状态且收到AXI数据时，数据才有效
-  val inst_reg = Reg(UInt(32.W))
-  val pc_reg = Reg(UInt(32.W)) // 用一个寄存器锁存PC，与指令对齐
+  val pc_reg = Reg(UInt(32.W))
 
-  io.out.valid := state === s_busy && io.axi.r.valid
-  io.out.bits.inst := io.axi.r.bits.rdata // 直接连接，或通过inst_reg
-  io.out.bits.pc := pc_reg
+  // ===========================================================================
+  //  核心逻辑重构：将跳转作为最高优先级
+  // ===========================================================================
 
-  // -- AXI请求逻辑 (受状态机和反压控制) --
-  io.axi.ar.valid := state === s_idle && io.out.ready // **关键：受反压控制**
+  // 默认情况下，不发起请求，也不接收数据
+  io.axi.ar.valid := false.B
+  io.axi.r.ready  := false.B
+
+  // 默认输出无效
+  io.out.valid := false.B
+
+  // 默认连接，避免 latch
   io.axi.ar.bits.araddr := pc
+  io.axi.ar.bits.arid   := 0.U
+  io.axi.ar.bits.arlen  := 0.U
+  io.axi.ar.bits.arsize := 2.U
+  io.axi.ar.bits.arburst:= 1.U
 
-  // -- AXI接收逻辑 --
-  io.axi.r.ready := state === s_busy && io.out.ready // **关键：数据接收也受反压控制**
+  io.out.bits.inst := io.axi.r.bits.rdata
+  io.out.bits.pc   := pc_reg
 
-  // -- 状态机与PC更新 --
-  switch(state) {
-    is(s_idle) {
-      // 当下游准备好，且AXI请求被接受时
-      when(io.axi.ar.fire) {
-        pc_reg := pc // **关键：在发请求时锁存PC**
-        state := s_busy
-      }
-    }
-    is(s_busy) {
-      // 当数据被下游接收时
-      when(io.out.fire) {
-        pc := pc + 4.U // **关键：只在指令被消耗时更新PC**
-        state := s_idle
-      }
-    }
-  }
-  when(io.out.fire) {
-  }
+  // --- 跳转检测 ---
   val pc_en_delay = RegNext(io.pcCtrl.pc_en, false.B)
   val pc_en_posedge = io.pcCtrl.pc_en && !pc_en_delay
 
-  val dnpc_delay = RegNext(io.pcCtrl.dnpc, 0.U)
-  val dnpc_pulse = dnpc_delay =/= io.pcCtrl.dnpc
-  // -- 跳转控制逻辑 (最高优先级) --
+  // **关键：使用 when/otherwise 结构来处理优先级**
+  when(pc_en_posedge) {
+    // --- 分支/跳转处理 ---
+    // 这是最高优先级。如果发生跳转，我们就冲刷流水线。
 
-  when(dnpc_pulse && pc_en_posedge) {
+    // 1. 更新 PC 到跳转目标
     pc := io.pcCtrl.dnpc
+    io.out.bits.pc := pc
+    // 2. 将状态机复位到 idle，准备从新地址取指
     state := s_idle
-    inst_reg := 0.U
-    // 当跳转发生时，需要冲刷流水线
-    // 将state复位到s_idle，可以自然地取消正在进行的任何操作。
-    // 下一拍，s_idle会根据新的pc发起请求。
+
+    // 3. 此时，所有 AXI 信号都保持其默认的 false 值。
+    //    我们不发起新的请求，也不准备接收任何数据。
+    //    如果恰好有一个旧的 AXI 响应（r.valid=true）在这一拍到达，它将被忽略，
+    //    因为 r.ready 为 false。AXI 总线会等待，直到下一拍我们进入正常状态。
+    //    (注意：这假设 AXI slave 不会因等待 r.ready 而超时)
+  } .otherwise {
+    // --- 正常状态机逻辑 ---
+    // 只有在没有跳转时，才执行常规的取指逻辑
+    switch(state) {
+      is(s_idle) {
+        // 准备好发起请求，并且下游也准备好了
+        io.axi.ar.valid := io.out.ready
+
+        when(io.axi.ar.fire) {
+          pc_reg := pc // 在发出请求时，锁存当前的PC
+          state  := s_busy
+        }
+      }
+      is(s_busy) {
+        // 准备好接收数据，并且下游也准备好了
+        io.axi.r.ready := io.out.ready
+        io.out.valid   := io.axi.r.valid // 当数据到达时，输出有效
+
+        when(io.out.fire) {
+          pc    := pc + 4.U // 只有在指令被成功消耗后，才更新PC
+          state := s_idle
+        }
+      }
+    }
   }
 }
 

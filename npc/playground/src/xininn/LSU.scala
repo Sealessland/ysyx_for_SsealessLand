@@ -59,6 +59,16 @@ class LSU extends Module {
   // 判断是否为非访存指令 (直通)
   val isPassthrough = io.in.valid && !io.in.bits.mem_en
   io.out.bits.ls_en := isPassthrough
+  when(isPassthrough) {
+    io.out.valid := io.in.valid
+    io.out.bits.rd_en   := io.in.bits.rd_en
+    io.out.bits.rd_addr := io.in.bits.rd_addr
+    io.out.bits.rd_data := io.in.bits.rd_data
+
+    // **关键修正**: ready信号直接由下游决定，打破环路
+    io.in.ready := io.out.ready
+    state := sIdle // 保持在空闲状态
+  }
 
   switch(state) {
     is(sIdle) {

@@ -89,7 +89,7 @@ alu.io.in2 := MuxLookup(io.in.bits.alusel, 0.U)(Seq(
   j_target := io.in.bits.imm+io.in.bits.pc
   when(io.in.bits.branch_en){
     when(alu.io.out === 1.U){
-      io.pcCtrl.pc_en := true.B
+      io.pcCtrl.pc_en := io.in.fire
       io.pcCtrl.dnpc:= j_target
     }
     // 假装写入，实际监视生命周期结束
@@ -97,7 +97,7 @@ alu.io.in2 := MuxLookup(io.in.bits.alusel, 0.U)(Seq(
     io.out.bits.rd_en:=true.B
   }
   when(io.in.bits.jump_en){
-    io.pcCtrl.pc_en := true.B
+    io.pcCtrl.pc_en := io.in.fire
     io.pcCtrl.dnpc := alu.io.out
     io.out.bits.rd_data := io.in.bits.pc + 4.U
   }
@@ -128,7 +128,7 @@ when(io.in.bits.system === 16.U){
   io.csr.pc := io.in.bits.pc
   io.csr.r_en := true.B
   io.csr.r_addr:=0x305.U(12.W)
-  io.pcCtrl.pc_en := true.B
+  io.pcCtrl.pc_en := io.in.fire
   io.pcCtrl.dnpc := io.csr.r_data
   io.out.bits.rd_en  := false.B
   io.out.bits.mem_en := false.B
@@ -141,7 +141,7 @@ when(io.in.bits.system === 16.U){
 }.elsewhen(io.in.bits.system === 2.U){
   io.csr.r_en := true.B
   io.csr.r_addr:=0x341.U(12.W)
-  io.pcCtrl.pc_en := true.B
+  io.pcCtrl.pc_en := io.in.fire
   io.pcCtrl.dnpc := io.csr.r_data
 }
 

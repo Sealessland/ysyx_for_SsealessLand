@@ -3,34 +3,51 @@ import chisel3._
 import chisel3.util.HasBlackBoxInline
 
 
-/**
- * 一个 BlackBox（黑盒），用于在特定条件下调用 DPI-C 函数 `inst_counter()`。
- * 这个函数通常在外部的 C/C++ 代码中实现，用于在仿真时进行指令计数或其他调试操作。
- *
- * @param WIDTH 端口en的位宽，通常为1，但可以扩展以支持一次计数多个指令。
- */
-class instcnt(val WIDTH: Int = 1) extends BlackBox(Map("WIDTH" -> WIDTH)) with HasBlackBoxInline {
+
+class InstCnt extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
     val clock = Input(Clock())
-    // 当 en 信号为高时，DPI-C 函数将被调用
-    val en = Input(UInt(WIDTH.W))
+    val en    = Input(Bool()) // 使用 Bool 更符合 Chisel 风格
+    val pc    = Input(UInt(32.W))
+    val inst  = Input(UInt(32.W))
   })
 
-  // 内联 Verilog 代码
-  setInline("instcnt.v",
+  // ----------------------------------------------------
+  // 内联的 SystemVerilog 代码 (已修正)
+  // ----------------------------------------------------
+  setInline("InstCnt.v",
     s"""
-       |module instcnt #(
-       |    parameter WIDTH = 1
-       |) (
+       |// A SystemVerilog module to call a DPI-C function on every instruction commit.
+       |module InstCnt(
        |    input clock,
-       |    input [WIDTH-1:0] en
+       |    input en,
+       |    input [31:0] pc,
+       |    input [31:0] inst
        |);
        |
-       |  import "DPI-C" function void inst_counter(input int count);
+       |  // 1. 使用 'packed struct' 来确保内存布局与 C 兼容
+       |  // 这是传递复杂数据的最佳实践。
+       |  typedef struct packed {
+       |    logic [31:0] pc;
+       |    logic [31:0] inst;
+       |  } diff_context_t;
        |
+       |  // 2. 修正 DPI 导入：方向为 'input'，因为数据从 SV 流向 C
+       |  import "DPI-C" function void inst_counter(input diff_context_t context);
+       |
+       |  // 3. 在时钟边沿触发的单个 always 块
        |  always @(posedge clock) begin
-       |    if (en > 0) begin
-       |      inst_counter(en);
+       |    // 仅当使能信号为高时调用
+       |    if (en) begin
+       |      // 声明一个临时的结构体变量
+       |      diff_context_t current_context;
+       |
+       |      // 4. 使用正确的端口名（而不是 io.pc）填充结构体
+       |      current_context.pc   = pc;
+       |      current_context.inst = inst;
+       |
+       |      // 调用 C 函数，将结构体作为参数传递
+       |      inst_counter(current_context);
        |    end
        |  end
        |
@@ -39,40 +56,24 @@ class instcnt(val WIDTH: Int = 1) extends BlackBox(Map("WIDTH" -> WIDTH)) with H
 }
 
 
-// ... (instcnt class definition from above) ...
-
-/**
- * 一个辅助对象，用于方便地实例化和使用 instcnt 模块。
- */
 object InstCounter {
   /**
-   * 当给定条件为真时，调用 inst_counter DPI-C 函数。
+   * 在 Chisel 设计中插入一个指令计数器。
+   * 当 'enable' 信号为真时，在时钟上升沿将 'pc' 和 'inst' 传递给 DPI-C 函数。
    *
-   * @param enable 一个Bool信号，当它为真时，计数器函数被调用。
+   * @param enable 一个 Bool 信号，作为调用 DPI-C 的总开关。
+   * @param pc     一个 32 位的 UInt，代表程序计数器。
+   * @param inst   一个 32 位的 UInt，代表指令。
+   * @param clock  一个时钟信号 (可以隐式提供)。
    */
-  def apply(enable: Bool ,clock: Clock): Unit = {
+  def apply(enable: Bool, pc: UInt, inst: UInt,clock:Clock): Unit = {
     // 实例化黑盒
-    val counter_inst = Module(new instcnt(1)) // 位宽为1，因为输入是Bool
+    val counter_inst = Module(new InstCnt())
 
-    // 连接时钟（使用调用者模块的隐式时钟）
+    // 连接所有端口
     counter_inst.io.clock := clock
-
-    // 连接使能信号
-    counter_inst.io.en := enable.asUInt
-  }
-
-  /**
-   * (重载) 当给定条件为真时，调用 inst_counter DPI-C 函数，并传递一个指定的计数值。
-   *
-   * @param enable 一个Bool信号，作为总开关。
-   * @param count  一个UInt信号，当enable为真时，其值被传递给DPI-C函数。
-   */
-  def apply(enable: Bool, count: UInt,clock: Clock): Unit = {
-    require(count.getWidth > 0, "Count width must be greater than 0")
-    val counter_inst = Module(new instcnt(count.getWidth))
-
-    counter_inst.io.clock := clock
-    // 连接使能信号：只有当 enable 为真时，才传递 count 的值，否则传递 0
-    counter_inst.io.en := Mux(enable, count, 0.U)
+    counter_inst.io.en    := enable
+    counter_inst.io.pc    := pc
+    counter_inst.io.inst  := inst
   }
 }
