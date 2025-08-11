@@ -56,7 +56,7 @@ class ysyx_23060321 extends Module {
     carry_inst:=ifu.io.out.bits.inst
   }
   when(ifu.io.out.fire){
-    InstCounter(enable = lsu.io.out.fire, pc = carry_pc, inst = carry_inst,clock = clock )
+    InstCounter(enable = lsu.io.out.fire,  inst = carry_inst,clock = clock )
   }
 }
 

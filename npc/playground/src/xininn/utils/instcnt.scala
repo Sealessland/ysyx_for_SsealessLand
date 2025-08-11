@@ -8,7 +8,6 @@ class InstCnt extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
     val clock = Input(Clock())
     val en    = Input(Bool()) // 使用 Bool 更符合 Chisel 风格
-    val pc    = Input(UInt(32.W))
     val inst  = Input(UInt(32.W))
   })
 
@@ -21,33 +20,17 @@ class InstCnt extends BlackBox with HasBlackBoxInline {
        |module InstCnt(
        |    input clock,
        |    input en,
-       |    input [31:0] pc,
        |    input [31:0] inst
        |);
        |
-       |  // 1. 使用 'packed struct' 来确保内存布局与 C 兼容
-       |  // 这是传递复杂数据的最佳实践。
-       |  typedef struct packed {
-       |    logic [31:0] pc;
-       |    logic [31:0] inst;
-       |  } diff_context_t;
+       |
        |
        |  // 2. 修正 DPI 导入：方向为 'input'，因为数据从 SV 流向 C
-       |  import "DPI-C" function void inst_counter(input diff_context_t context);
-       |
+       |  import "DPI-C" function void inst_counter(input int inst);
        |  // 3. 在时钟边沿触发的单个 always 块
        |  always @(posedge clock) begin
-       |    // 仅当使能信号为高时调用
        |    if (en) begin
-       |      // 声明一个临时的结构体变量
-       |      diff_context_t current_context;
-       |
-       |      // 4. 使用正确的端口名（而不是 io.pc）填充结构体
-       |      current_context.pc   = pc;
-       |      current_context.inst = inst;
-       |
-       |      // 调用 C 函数，将结构体作为参数传递
-       |      inst_counter(current_context);
+       |      inst_counter(inst);
        |    end
        |  end
        |
@@ -66,14 +49,13 @@ object InstCounter {
    * @param inst   一个 32 位的 UInt，代表指令。
    * @param clock  一个时钟信号 (可以隐式提供)。
    */
-  def apply(enable: Bool, pc: UInt, inst: UInt,clock:Clock): Unit = {
+  def apply(enable: Bool,  inst: UInt,clock:Clock): Unit = {
     // 实例化黑盒
     val counter_inst = Module(new InstCnt())
 
     // 连接所有端口
     counter_inst.io.clock := clock
     counter_inst.io.en    := enable
-    counter_inst.io.pc    := pc
     counter_inst.io.inst  := inst
   }
 }

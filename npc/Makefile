@@ -155,7 +155,7 @@ PERIP_V_FILES = $(shell find ysyxSoC/perip -name "*.v")
 # 或者在这里设置默认值
 NUM_CORES ?= 14
 
-soc:
+soc:verilog
 	$(call git_commit, "gen verilator model for SoC")
 	echo "生成 Verilator 模型..."
 	mkdir -p $(SIM_DIR)/SoC_model

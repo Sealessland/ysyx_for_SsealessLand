@@ -10,8 +10,8 @@
 VysyxSoCFull::VysyxSoCFull(VerilatedContext* _vcontextp__, const char* _vcname__)
     : VerilatedModel{*_vcontextp__}
     , vlSymsp{new VysyxSoCFull__Syms(contextp(), _vcname__, this)}
-    , externalPins_uart_tx{vlSymsp->TOP.externalPins_uart_tx}
     , externalPins_uart_rx{vlSymsp->TOP.externalPins_uart_rx}
+    , externalPins_uart_tx{vlSymsp->TOP.externalPins_uart_tx}
     , reset{vlSymsp->TOP.reset}
     , clock{vlSymsp->TOP.clock}
     , externalPins_gpio_seg_0{vlSymsp->TOP.externalPins_gpio_seg_0}
