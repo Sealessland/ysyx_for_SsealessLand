@@ -7,12 +7,18 @@
 #include <string.h>
 #include <stdio.h>
 
-#define REGNUM 32
+#include "include/core-exe.h"
 
+#define REGNUM 32
+#define MSTATUS 0x300
+#define MTVEC   0x305
+#define MEPC    0x341
+#define MCAUSE  0x342
 // 声明全局变量
+
  uint32_t gpr[REGNUM];  // 通用寄存器数组
-static uint32_t pc;           // 程序计数器
-static uint32_t csr[4];       // CSR 寄存器
+ uint32_t pc;           // 程序计数器
+ uint32_t csr[4096];       // CSR 寄存器
 
 // 寄存器名称数组
 const char *regs[] = {
@@ -91,20 +97,25 @@ gpr[29] = rootp->core__DOT__rf__DOT__rf_29;
 gpr[30] = rootp->core__DOT__rf__DOT__rf_30;
 // gpr[31] 对应 regs[31] -> "t6" (x31)
 gpr[31] = rootp->core__DOT__rf__DOT__rf_31;
-
   // 获取 PC
   pc =core->io_debugPC;
 
   // CSR 寄存器在提供的结构中不可见，暂时设为0
-  for (int i = 0; i < 4; i++) {
-    csr[i] = 0;
-  }
-}
 
+}
+void get_csr(Vcore* core)
+{
+  Vcore___024root* rootp = core->rootp;
+
+csr[MTVEC] = rootp->core__DOT__csr__DOT__mtvec;
+csr[MSTATUS] = rootp->core__DOT__csr__DOT__mstatus;
+csr[MEPC] = rootp->core__DOT__csr__DOT__mepc;
+csr[MCAUSE] = rootp->core__DOT__csr__DOT__mcause;
+}
 // 显示寄存器值的函数
 void isa_reg_display(Vcore* core) {
   get_reg(core);  // 确保最新值
-
+  get_csr(core);
   printf("\ndut-pc=%x\n", pc);
   for (int i = 0; i < REGNUM; i++) {
     if (gpr[i] >= 0x02000000) {

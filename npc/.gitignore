@@ -27,4 +27,6 @@ riscv-opcodes/
 rvdecoderdb/
 ysyxSoC/
 AdaptSim/
-
+Sim/SoC_model/
+Sim/v_model/
+Sim/main

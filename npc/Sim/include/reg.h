@@ -32,6 +32,7 @@ uint32_t isa_reg_str2val(const char *s, bool *success);
 
 void get_reg(Vcore* core);
 // 打印 RISC-V 寄存器映射关系
+void get_csr(Vcore* core);
 void isa2Reg();
 uint32_t isa_reg_halt(bool *success);
 

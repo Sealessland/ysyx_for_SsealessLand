@@ -6,6 +6,7 @@
 #define VERILATED_VYSYXSOCFULL___024UNIT_H_  // guard
 
 #include "verilated.h"
+#include "verilated_threads.h"
 
 
 class VysyxSoCFull__Syms;

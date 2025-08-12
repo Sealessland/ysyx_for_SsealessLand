@@ -49,6 +49,15 @@ class CSR extends Module{
       is(MEPC){
         mepc := io.w_data
       }
+      is(MCAUSE){
+        mcause := io.w_data
+      }
+      is(MIP){
+        mip := io.w_data
+      }
+      is(MIE){
+        mie := io.w_data
+      }
     }
   }
   when(io.pc_en){

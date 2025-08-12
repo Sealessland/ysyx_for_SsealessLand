@@ -17,7 +17,8 @@
 #include <memory/paddr.h>
 #include <device/mmio.h>
 #include <isa.h>
-
+#define SHARE 1
+bool skip = false;
 #if   defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;
 #else // CONFIG_PMEM_GARRAY
@@ -55,6 +56,12 @@ void init_mem() {
 
 word_t paddr_read(paddr_t addr, int len) {
   word_t ret = 0;
+  #ifdef SHARE
+  if (!in_pmem(addr)){
+    skip =true;
+    return 0; // If the address is not in physical memory, skip the read operation
+  }
+  #endif
   if (likely(in_pmem(addr))) {
     ret = pmem_read(addr, len);
     #ifdef CONFIG_MTRACE
@@ -75,6 +82,14 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
+  #ifdef SHARE
+  if (!in_pmem(addr)){
+    skip =true;
+    return ; // If the address is not in physical memory, skip the read operation
+  }
+  #endif
+  
+  
   #ifdef CONFIG_MTRACE
   printf("MTRACE: memory write addr = " FMT_PADDR ", len = %d, data = 0x%x\n", 
          addr, len, data);

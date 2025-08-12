@@ -21,7 +21,7 @@ CoreConfig parse_args(int argc, char** argv) {
     // 设置默认值
     cfg.wave_file = "wave.vcd";
     cfg.cycles = 300;
-    cfg.start_pc = 0x20000000;
+    cfg.start_pc = 0x80000000;
     cfg.debug = true;
     cfg.diff_test = true;
     cfg.memory_file = "";

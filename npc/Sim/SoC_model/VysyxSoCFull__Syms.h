@@ -29,6 +29,12 @@ class alignas(VL_CACHE_LINE_BYTES)VysyxSoCFull__Syms final : public VerilatedSym
     VlDeleter __Vm_deleter;
     bool __Vm_didInit = false;
 
+    // MULTI-THREADING
+    VlThreadPool* __Vm_threadPoolp;
+    bool __Vm_even_cycle__ico = false;
+    bool __Vm_even_cycle__act = false;
+    bool __Vm_even_cycle__nba = false;
+
     // MODULE INSTANCE STATE
     VysyxSoCFull___024root         TOP;
     VysyxSoCFull___024unit         TOP____024unit;

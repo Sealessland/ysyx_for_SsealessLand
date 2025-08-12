@@ -30,7 +30,8 @@ class WBU extends Module {
 
   // --- 2. 输出端驱动逻辑 (连接到寄存器 堆) ---
   // 这部分逻辑保持不变
-  io.out.en   := io.in.valid
+  io.out.en   := io.in.bits.rd_en
   io.out.addr := io.in.bits.rd_addr
   io.out.data := io.in.bits.rd_data
+
 }
