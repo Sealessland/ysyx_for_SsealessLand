@@ -7,7 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include <map>
-
+#include "include/difftest.h"
 #ifdef DIFFTEST
 #include "include/difftest.h"
 #endif
@@ -70,6 +70,7 @@ uint32_t Memory::read(uint32_t addr, uint32_t len) {
 
 // 内存写入函数 - 支持MMIO
 void Memory::write(uint32_t addr, uint32_t len, uint32_t value) {
+
     if (len > 4) {
         printf("错误：不支持大于4字节的内存写入 addr=0x%08x, len=%d\n", addr, len);
         return;
@@ -77,6 +78,11 @@ void Memory::write(uint32_t addr, uint32_t len, uint32_t value) {
 
     // 检查是否为MMIO地址
     if (is_mmio_addr(addr)) {
+#ifdef DIFFTEST
+        std::cout << "MMIO写入地址: 0x" << std::hex << addr << "，数据: 0x" << value << std::dec << std::endl;
+        difftest_skip();
+        std::cout << "SKIP happened" << std::endl;
+#endif
         mmio_write(addr, len, value);
 #ifdef MTRACE
         printf("MMIO写入：addr=0x%08x, len=%d, data=0x%08x\n", addr, len, value);
@@ -136,7 +142,31 @@ bool Memory::load_from_file(const std::string& filename, uint32_t offset) {
 void Memory::load_default_image(uint32_t offset) {
     // RISC-V MMIO测试程序
     const uint32_t default_program[] = {
+        // 1. CSRRW: 测试基本读写
+        0x34059513,  // csrrw a0, mscratch, a1      // a0=old_mscratch, mscratch=0xdeadbeef
 
+ // 2. CSRRS: 测试置位 (SET)
+ 0x000f0593,  // li a1, 0x0000f0f0
+ 0x3405a513,  // csrrs a0, mscratch, a1      // mscratch |= 0xf0f0
+
+ // 3. CSRRC: 测试清零 (CLEAR)
+ 0x00ff0593,  // li a1, 0x0000ff00
+ 0x3405b513,  // csrrc a0, mscratch, a1      // mscratch &= ~0xff00
+
+ // 4. CSRRWI: 测试立即数写
+ 0x3404d573,  // csrrwi a0, mscratch, 9      // mscratch = 9
+
+ // 5. CSRRSI: 测试立即数置位
+ 0x340e2573,  // csrrsi a0, mscratch, 28     // mscratch |= 28
+
+ // 6. CSRRCI: 测试立即数清零
+ 0x3401f573,  // csrrci a0, mscratch, 3      // mscratch &= ~3
+
+ // 7. ECALL (yield): 测试系统调用
+ // a0=11 (yield), a7=17 (ecall)
+ 0x00b00513,  // li a0, 11
+ 0x01100893,  // li a7, 17
+ 0x00000073 ,  // ecall                       // 触发yield异常
         // 初始化栈指针
         0x87fff137,  // lui sp, 0x87fff        # sp = 0x87fff000
         0xff010113,  // addi sp, sp, 0xff0     # sp = 0x87fff000 + 0xff0 = 0x87fffff0
@@ -272,4 +302,11 @@ extern "C" void mrom_read(int32_t addr, int32_t *data)
 #endif
     // 将读取的值存储到指针指向的内存中
     *data = read_val;
+}
+extern "C" void inst_counter(int count)
+{
+    std::cout << "inst_counter: count=" << count << std::endl;
+    // 这里可以实现指令计数逻辑
+    // 例如，记录执行的指令数量等
+    // 目前只是打印计数值
 }

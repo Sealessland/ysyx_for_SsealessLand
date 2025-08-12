@@ -2,7 +2,7 @@
 #include <iostream>
 #include <ctime>
 #include <queue>
-
+#include <difftest.h>
 // 串口设备状态
 static std::queue<char> serial_input_buffer;
 static bool serial_ready = true;

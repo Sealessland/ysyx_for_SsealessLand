@@ -1,6 +1,7 @@
 
 import te._
-import xininn._
+import gyr._
+import xininn.{core, _}
 object Elaborate extends App {
   val firtoolOptions = Array(
     "--lowering-options=" + List(
@@ -15,7 +16,6 @@ object Elaborate extends App {
   // 生成主要模块的Verilog代码
   //circt.stage.ChiselStage.emitSystemVerilogFile(new core, args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new ysyx_23060321, args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new IFU, args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new IDU, args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new EXU, args, firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new LSU, args, firtoolOptions)

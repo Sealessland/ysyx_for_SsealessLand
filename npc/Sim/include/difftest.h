@@ -16,6 +16,9 @@ bool difftest_init(const char* so_file, Vcore* core);
 // 执行一步差分测试
 void difftest_step(Vcore* core);
 
+// 跳过差分测试
+bool difftest_skip();
+
 // 清理差分测试资源
 void difftest_cleanup();
 

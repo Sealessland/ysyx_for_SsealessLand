@@ -42,23 +42,22 @@ void isa_reg_display() {
   printf("dut-mcause = %-#11x\n",cpu.csr[MCAUSE]);
 }
 
-word_t isa_reg_str2val(const char *s, bool *success) {
-  int i;
-  for(i = 0;i < REGNUMBER;i++){
-    if(strcmp(regs[i],s+1) == 0)
-      break;
-  }
-  
-  if(i < REGNUMBER){
-    *success = true;
-    //printf("%3s		%d\n",regs[i],cpu.gpr[i]);
-  }
-  else {
-    if(strcmp("pc",s+1) == 0){
-	*success = true;
-	return cpu.pc;
-}
-    *success = false;
-}
-  return cpu.gpr[i];
+
+
+word_t isa_reg_str2val(const char *s, bool *success) 
+{
+	if (strcmp(s + 1, "pc") == 0) 
+	{
+		return cpu.pc;
+	}
+	for (int i = 0; i < REGNUMBER; i++) 
+	{
+		if (strcmp(s + 1, regs[i]) == 0) 
+		{
+			*success = true;
+			return cpu.gpr[i];
+		}
+	}
+	*success = false;
+	return 0;
 }

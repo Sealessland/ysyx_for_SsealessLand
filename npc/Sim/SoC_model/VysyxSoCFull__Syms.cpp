@@ -15,12 +15,13 @@ VysyxSoCFull__Syms::VysyxSoCFull__Syms(VerilatedContext* contextp, const char* n
     : VerilatedSyms{contextp}
     // Setup internal state of the Syms class
     , __Vm_modelp{modelp}
+    , __Vm_threadPoolp{static_cast<VlThreadPool*>(contextp->threadPoolp())}
     // Setup module instances
     , TOP{this, namep}
     , TOP____024unit{this, Verilated::catName(namep, "$unit")}
 {
         // Check resources
-        Verilated::stackCheck(631);
+        Verilated::stackCheck(217);
     // Configure time unit / time precision
     _vm_contextp__->timeunit(-9);
     _vm_contextp__->timeprecision(-12);

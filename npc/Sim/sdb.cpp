@@ -13,7 +13,6 @@
 #include "include/SoC-exe.h"
 #include <regex>
 #include <reg.h>
-#define SOC 1
 #ifdef CORE
 extern CoreExecutor* g_executor; // 全局执行器指针，需要在主程序中声明
 #endif
@@ -85,7 +84,7 @@ int cmd_info(char *args){
     return -1;
   }
 #ifdef CORE
-  Vcore* core = g_executor->get_core();
+  Vcore* core = g_executor->get_model();
 #endif
 #ifdef SOC
   VysyxSoCFull* soc = g_executor->get_model();

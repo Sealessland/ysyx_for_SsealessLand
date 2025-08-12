@@ -174,8 +174,8 @@ void CoreExecutor::print_instruction_info(uint32_t inst_num, uint32_t from_pc, u
     
     // 调试信息第一行
     std::cout << "  " ANSI_FG_YELLOW "输入1:" ANSI_RESET "     " ANSI_FG_CYAN "0x" << std::setw(8) << std::setfill('0') 
-              << core->io_debugin1 << ANSI_RESET << " │ " ANSI_FG_YELLOW "输入2:" ANSI_RESET "     " ANSI_FG_CYAN "0x" << std::setw(8) << std::setfill('0')
-              << core->io_debugin2 << ANSI_RESET << std::endl;
+               << ANSI_RESET << " │ " ANSI_FG_YELLOW "输入2:" ANSI_RESET "     " ANSI_FG_CYAN "0x" << std::setw(8) << std::setfill('0')
+                << ANSI_RESET << std::endl;
 
     
 

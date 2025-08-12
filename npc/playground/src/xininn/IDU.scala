@@ -294,12 +294,12 @@ object systeminst extends DecodeField[Insn,UInt]{
   override def genTable (i:Insn): BitPat = i.inst.name match {
     case "ecall"      => BitPat("b1000")
     case "ebreak"     => BitPat("b0001")
-    case "mret"       => BitPat("b0001")
-    case "sret"       => BitPat("b0010")
-    case "wfi"        => BitPat("b0011")
-    case "sfence.vma" => BitPat("b0100")
-    case "fence"      => BitPat("b0101")
-    case "fence.i"    => BitPat("b0110")
+    case "mret"       => BitPat("b0010")
+    case "sret"       => BitPat("b0011")
+    case "wfi"        => BitPat("b0100")
+    case "sfence.vma" => BitPat("b0101")
+    case "fence"      => BitPat("b0110")
+    case "fence.i"    => BitPat("b0111")
     case _            => BitPat("b0000")
 
   }
