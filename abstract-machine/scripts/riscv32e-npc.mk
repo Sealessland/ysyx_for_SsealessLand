@@ -1,5 +1,7 @@
 include $(AM_HOME)/scripts/isa/riscv.mk
 include $(AM_HOME)/scripts/platform/npc.mk
+INC_PATH += $(NPC_HOME)/config/include/generated
+CFLAGS  += -DISA_H=\"riscv/riscv.h\"
 COMMON_CFLAGS += -march=rv32e_zicsr -mabi=ilp32e  # overwrite
 LDFLAGS       += -melf32lriscv                    # overwrite
 

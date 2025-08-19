@@ -4,104 +4,116 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-size_t strlen(const char *s) {
-	size_t len;
-	for(len = 0; s[len] != '\0' ; len++);
-	return len;
+size_t strlen(const char *s)
+{
+	size_t length = 0;
+	while(*s)
+	{
+		length++;
+		s++;
+	}
+	return length;
 }
 
-char *strcpy(char *dst, const char *src) {
-  size_t i;
-	for (i = 0; src[i] != '\0'; i++)
-  	dst[i] = src[i];
-  dst[i] = '\0';
-  return dst;
+char *strcpy(char *dst, const char *src)
+{
+	char *ret = dst;
+	while(*src)
+		*dst++ = *src++;
+	*dst = '\0';
+	return ret;
 }
 
-char *strncpy(char *dst, const char *src, size_t n) {
-  size_t i;
-	for (i = 0; i < n && src[i] != '\0'; i++)
-  	dst[i] = src[i];
-  for ( ; i < n; i++)
-    dst[i] = '\0';
-  return dst;
-}
-
-char *strcat(char *dst, const char *src) {
-  size_t dst_len = strlen(dst);
-  size_t i;
-  for (i = 0 ; src[i] != '\0' ; i++)
-  	dst[dst_len + i] = src[i];
-  dst[dst_len + i] = '\0';
+// copied from Linux Programmer's Manual
+char *strncpy(char *dst, const char *src, size_t n)
+{
+        size_t i;
+        for (i = 0; i < n && src[i] != '\0'; i++)
+                dst[i] = src[i];
+        for ( ; i < n; i++)
+                dst[i] = '\0';
 	return dst;
 }
 
-int strcmp(const char *s1, const char *s2) {
-	for (int i = 0; s1[i] != '\0' || s2[i] != '\0'; i++) {
-		if (s1[i] != s2[i]) {
-  			return (s1[i] < s2[i]) ? -1 : 1;
-  		}
+char *strcat(char *dst, const char *src)
+{
+	char *ret = dst;
+	while(*dst)
+		dst++;
+	while(*src)
+		*dst++ = *src++;
+	*dst = '\0';
+	return ret;
+}
+
+int strcmp(const char *s1, const char *s2) 
+{
+	while(*s1 && *s2 && *s1 == *s2)
+	{
+		s1++;
+		s2++;
 	}
-  	return 0;
+	return (int)(*s1) - (int)(*s2);
 }
 
-int strncmp(const char *s1, const char *s2, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        if (s1[i] == '\0' || s2[i] == '\0' || s1[i] != s2[i]) {
-            if (s1[i] == s2[i]) {
-                return 0;
-            }
-            return (s1[i] < s2[i]) ? -1 : 1;
-        }
-    }
-    return 0;
-}
-
-void *memset(void *s, int c, size_t n) {
-	unsigned char *p = (unsigned char *)s;
-  for (size_t i = 0; i < n; i++) {
-  	p[i] = (unsigned char)c;
-  }
-  return s;
-}
-
-void *memmove(void *dst, const void *src, size_t n) {
-	int i;
-	char *dest = (char *)dst;
-	char *source = (char *)src;
-	if(dst <= src){
-		for(i = 0;i < n;i++){
-			*dest++ = *source++;
-		}
+int strncmp(const char *s1, const char *s2, size_t n)
+{
+	while(n != 0 && *s1 && *s2 && *s1 == *s2)
+	{
+		s1++;
+		s2++;
+		n--;
 	}
-	else{
-		dest += n-1;
-		source += n-1;
-		for(i = 0;i < n;i++){
-			*dest-- = *source--;
-		}
-	}
-	return (void *)dst;
+	return (n == 0) ? 0 : (int)(*s1) - (int)(*s2);
 }
 
-void *memcpy(void *out, const void *in, size_t n) {
-	int i;
-	char *dest = (char *)out;
-	char *source = (char *)in;
-	for(i = 0;i < n;i++){
-		*dest++ = *source++;
-	}
-	return (void *)out;
+void *memset(void *s, int c, size_t n) 
+{
+	uint8_t *p = s;
+	while(n--)
+		*p++ = (uint8_t)c;
+	return s;
 }
 
-int memcmp(const void *s1, const void *s2, size_t n) {
-	unsigned char *p1 = (unsigned char *)s1;
-	unsigned char *p2 = (unsigned char *)s2;
-	int i;
-	for(i = 0; i < n ; i++)
-		if(p1[i] != p2[i])
-			return (p1[i] < p2[i]) ? -1 : 1;
-	return 0;
+void *memmove(void *dst, const void *src, size_t n) 
+{
+	uint8_t *p = dst;
+	const uint8_t *q = src;
+	if(p < q)
+	{
+		while(n--)
+			*p++ = *q++;
+	}
+	else
+	{
+		p += n;
+		q += n;
+		while(n--)
+			*--p = *--q;
+	}
+	return dst;
+}
+
+void *memcpy(void *out, const void *in, size_t n) 
+{
+	uint8_t *p = out;
+	const uint8_t *q = in;
+	// memory overlap: UB
+	while(n--)
+		*p++ = *q++;
+	return out;
+}
+
+int memcmp(const void *s1, const void *s2, size_t n) 
+{
+	const uint8_t *p1 = s1, *p2 = s2;
+	while(n != 0 && *p1 && *p2 && *p1 == *p2)
+	{
+		p1++;
+		p2++;
+		n--;
+	}
+	return (n == 0) ? 0 : (int)(*p1) - (int)(*p2);
 }
 
 #endif

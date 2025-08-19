@@ -1,5 +1,6 @@
 #include <am.h>
 #include <klib-macros.h>
+#include <stdio.h>
 
 void __am_timer_init();
 void __am_gpu_init();
@@ -54,6 +55,10 @@ bool ioe_init() {
   __am_audio_init();
   return true;
 }
+void ioe_read (int reg, void *buf) {
+  ((handler_t)lut[reg])(buf);
+}
 
-void ioe_read (int reg, void *buf) { ((handler_t)lut[reg])(buf); }
-void ioe_write(int reg, void *buf) { ((handler_t)lut[reg])(buf); }
+void ioe_write(int reg, void *buf) {
+  ((handler_t)lut[reg])(buf);
+}
