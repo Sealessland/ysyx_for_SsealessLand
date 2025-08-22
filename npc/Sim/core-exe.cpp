@@ -12,22 +12,14 @@
 #include <Vcore.h>
 #include "verilated.h"
 #include<states.h>
-
+#include<Vcore___024root.h>
+#include <beauty.h>
 #include "include/difftest.h"
 #ifdef DIFFTEST
 #include "include/difftest.h"
+
 #endif
 
-// 颜色定义
-#define ANSI_FG_RED     "\33[1;31m"
-#define ANSI_FG_GREEN   "\33[1;32m"
-#define ANSI_FG_YELLOW  "\33[1;33m"
-#define ANSI_FG_BLUE    "\33[1;34m"
-#define ANSI_FG_MAGENTA "\33[1;35m"
-#define ANSI_FG_CYAN    "\33[1;36m"
-#define ANSI_FG_WHITE   "\33[1;37m"
-#define ANSI_RESET      "\33[0m"
-#define ANSI_BOLD       "\33[1m"
 
 
 
@@ -242,12 +234,11 @@ void CoreExecutor::run_insts(int insts) {
 
          if (core->io_inst_done) {
             executed_insts++;
-
-            difftest_step(core);
+            difftest_step(dut);
+            // 显示详细的指令执行信息
              current_pc = core->io_debugPC;
              current_inst = core->io_debugInst;
             executed_insts++;
-            //difftest_step(core);
             if (cpu_state.state != CPU_STATES::CPU_RUNNING) {
 #ifdef ITRACE
                 std::cout << ANSI_FG_RED "❌ 执行中断：CPU状态异常，状态码: " << static_cast<int>(cpu_state.state) << ANSI_RESET << std::endl;
@@ -268,3 +259,40 @@ void CoreExecutor::run_insts(int insts) {
     // 显示执行统计
     print_execution_summary(executed_insts, insts);
 }
+
+void CoreExecutor::get_reg(dutContext ctx) {
+    Vcore___024root* rootp = core->rootp;
+    ctx.gpr[0] = rootp->core__DOT__rf__DOT__rf_0;
+    ctx.gpr[1] = rootp->core__DOT__rf__DOT__rf_1;
+    ctx.gpr[2] = rootp->core__DOT__rf__DOT__rf_2;
+    ctx.gpr[3] = rootp->core__DOT__rf__DOT__rf_3;
+    ctx.gpr[4] = rootp->core__DOT__rf__DOT__rf_4;
+    ctx.gpr[5] = rootp->core__DOT__rf__DOT__rf_5;
+    ctx.gpr[6] = rootp->core__DOT__rf__DOT__rf_6;
+    ctx.gpr[7] = rootp->core__DOT__rf__DOT__rf_7;
+    ctx.gpr[8] = rootp->core__DOT__rf__DOT__rf_8;
+    ctx.gpr[9] = rootp->core__DOT__rf__DOT__rf_9;
+    ctx.gpr[10] = rootp->core__DOT__rf__DOT__rf_10;
+    ctx.gpr[11] = rootp->core__DOT__rf__DOT__rf_11;
+    ctx.gpr[12] = rootp->core__DOT__rf__DOT__rf_12;
+    ctx.gpr[13] = rootp->core__DOT__rf__DOT__rf_13;
+    ctx.gpr[14] = rootp->core__DOT__rf__DOT__rf_14;
+    ctx.gpr[15] = rootp->core__DOT__rf__DOT__rf_15;
+    ctx.gpr[16] = rootp->core__DOT__rf__DOT__rf_16;
+    ctx.gpr[17] = rootp->core__DOT__rf__DOT__rf_17;
+    ctx.gpr[18] = rootp->core__DOT__rf__DOT__rf_18;
+    ctx.gpr[19] = rootp->core__DOT__rf__DOT__rf_19;
+    ctx.gpr[20] = rootp->core__DOT__rf__DOT__rf_20;
+    ctx.gpr[21] = rootp->core__DOT__rf__DOT__rf_21;
+    ctx.gpr[22] = rootp->core__DOT__rf__DOT__rf_22;
+    ctx.gpr[23] = rootp->core__DOT__rf__DOT__rf_23;
+    ctx.gpr[24] = rootp->core__DOT__rf__DOT__rf_24;
+    ctx.gpr[25] = rootp->core__DOT__rf__DOT__rf_25;
+    ctx.gpr[26] = rootp->core__DOT__rf__DOT__rf_26;
+    ctx.gpr[27] = rootp->core__DOT__rf__DOT__rf_27;
+    ctx.gpr[28] = rootp->core__DOT__rf__DOT__rf_28;
+    ctx.gpr[29] = rootp->core__DOT__rf__DOT__rf_29;
+    ctx.gpr[30] = rootp->core__DOT__rf__DOT__rf_30;
+    ctx.gpr[31] = rootp->core__DOT__rf__DOT__rf_31;
+ctx.pc = core->io_debugPC;
+};
