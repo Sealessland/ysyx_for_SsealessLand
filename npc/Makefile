@@ -18,8 +18,6 @@ verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
 	mill -i -j 8 $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
-	head -n -3 build/core.sv > build/core.sv.tmp && mv build/core.sv.tmp build/core.sv
-	head -n -3 build/ysyx_23060321.sv > build/ysyx_23060321.sv.tmp && mv build/ysyx_23060321.sv.tmp build/ysyx_23060321.sv
 help:
 	mill -i $(PRJ).runMain Elaborate --help
 
@@ -48,7 +46,7 @@ verilator-model: verilog
 	@echo "生成 Verilator 模型..."
 	@mkdir -p $(SIM_DIR)/v_model
 	@verilator --cc --trace -Wall -Wno-UNOPTFLAT -Wno-fatal \
-		--top-module core $(BUILD_DIR)/core.sv \
+		--top-module core $(BUILD_DIR)/*.sv $(BUILD_DIR)/*.v \
 		--Mdir $(SIM_DIR)/v_model
 	@echo "编译 Verilator 模型..."
 	@$(MAKE) -C $(SIM_DIR)/v_model -f Vcore.mk
@@ -166,7 +164,8 @@ soc:verilog
 		+incdir+ysyxSoC/perip/uart16550/rtl \
 		+incdir+ysyxSoC/perip/spi/rtl \
 		ysyxSoC/build/ysyxSoCFull.v \
-		$(BUILD_DIR)/ysyx_23060321.sv \
+		$(BUILD_DIR)/*.sv \
+		$(BUILD_DIR)/*.v\
 		$(PERIP_V_FILES) \
 		--Mdir $(SIM_DIR)/SoC_model \
 		--timescale "1ns/1ns" --no-timing\

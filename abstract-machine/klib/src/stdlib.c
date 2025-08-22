@@ -3,7 +3,6 @@
 #include <klib-macros.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
-static char * hbrk = NULL;
 static unsigned long int next = 1;
 
 int rand(void) {
@@ -30,22 +29,30 @@ int atoi(const char* nptr) {
   return x;
 }
 
-void *malloc(size_t size) {
-  // On native, malloc() will be called during initializaion of C runtime.
-  // Therefore do not call panic() here, else it will yield a dead recursion:
-  //   panic() -> putchar() -> (glibc) -> malloc() -> panic() 
-  if(hbrk == NULL) hbrk = (void *)ROUNDUP(heap.start, 8);
-  size  = (size_t)ROUNDUP(size, 8);
-  char *old = hbrk;
-  hbrk += size;
-  assert((uintptr_t)heap.start <= (uintptr_t)hbrk && (uintptr_t)hbrk < (uintptr_t)heap.end);
-  for (uint64_t *p = (uint64_t *)old; p != (uint64_t *)hbrk; p ++) {
-    *p = 0;
-  }
-  return old;
+void *malloc(size_t size) 
+{
+	// On native, malloc() will be called during initializaion of C runtime.
+	// Therefore do not call panic() here, else it will yield a dead recursion:
+	//   panic() -> putchar() -> (glibc) -> malloc() -> panic()
+	static uintptr_t offset = 0;
+#if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
+	size = ROUNDUP(size, __BIGGEST_ALIGNMENT__);
+	if (heap.start + offset + size > heap.end) {
+		panic("malloc: out of memory");
+		return NULL;
+	}
+	void *ptr = (void *)(heap.start + offset);
+	offset += size;
+	return ptr;
+#endif
+	return NULL;
 }
 
-void free(void *ptr) {
+void free(void *ptr)
+{
+	// free() is not implemented
+	// NOTHING HAPPENS......
+	;
 }
 
 #endif

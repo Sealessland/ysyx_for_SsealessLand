@@ -1,6 +1,7 @@
-CROSS_COMPILE ?= riscv64-unknown-elf-
+CROSS_COMPILE := riscv32-unknown-linux-gnu-
 COMMON_CFLAGS := -fno-pic -march=rv64g -mcmodel=medany -mstrict-align
-CFLAGS        += $(COMMON_CFLAGS) -static
+CFLAGS        += $(COMMON_CFLAGS) -static 
+CFLAGS		  += CPPFLAGS="-I/tmp/fake-include" 
 ASFLAGS       += $(COMMON_CFLAGS) -O0
 LDFLAGS       += -melf64lriscv
 

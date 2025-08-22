@@ -9,7 +9,7 @@
 !*.py
 !*.mk
 !Makefile
-!README
+!README.md
 !LICENSE
 .*
 _*

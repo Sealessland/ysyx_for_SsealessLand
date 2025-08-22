@@ -1,5 +1,6 @@
 #include <am.h>
 #include <klib-macros.h>
+#include <stdio.h>
 
 void __am_timer_init();
 void __am_gpu_init();
@@ -54,6 +55,15 @@ bool ioe_init() {
   __am_audio_init();
   return true;
 }
+void ioe_read (int reg, void *buf) {
+  // 使用一个非常简单的字符串用于测试
+  printf("---- TEST 123: MY CHANGE IS HERE ----\n");
 
-void ioe_read (int reg, void *buf) { ((handler_t)lut[reg])(buf); }
-void ioe_write(int reg, void *buf) { ((handler_t)lut[reg])(buf); }
+  ((handler_t)lut[reg])(buf);
+}
+
+void ioe_write(int reg, void *buf) {
+  // 同样地，修改这里的日志
+printf("[IOE] ==> Read  - Register ID: %d, Buffer @ 0x%x\n", reg, (uintptr_t)buf);  
+  ((handler_t)lut[reg])(buf);
+}
