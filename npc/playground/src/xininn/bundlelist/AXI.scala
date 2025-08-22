@@ -90,6 +90,67 @@ class SoCAXI extends Bundle {
   val bid    = Input(UInt(4.W))
   val bresp  = Input(UInt(2.W))
 }
+
+
+
+class AxiChiselToSoc extends Module {
+  val io = IO(new Bundle {
+    // 从 Chisel 核心模块接收 AXI 信号
+    val in = Flipped(new AXI())
+    // 输出为扁平化的 SoC AXI 信号
+    val out = new SoCAXI()
+  })
+
+  // --- 信号连接 ---
+  // 这里的逻辑就是简单地将 DecoupledIO 结构展开并连接到扁平化的端口上
+
+  // Master -> Slave Channels (AW, W, AR)
+  // 方向: io.in驱动io.out, io.out的ready信号驱动io.in的ready
+
+  // Write Address Channel (AW)
+  io.out.awvalid := io.in.aw.valid
+  io.in.aw.ready := io.out.awready
+  io.out.awid    := io.in.aw.bits.awid
+  io.out.awaddr  := io.in.aw.bits.awaddr
+  io.out.awlen   := io.in.aw.bits.awlen
+  io.out.awsize  := io.in.aw.bits.awsize
+  io.out.awburst := io.in.aw.bits.awburst
+
+  // Write Data Channel (W)
+  io.out.wvalid := io.in.w.valid
+  io.in.w.ready := io.out.wready
+  io.out.wdata  := io.in.w.bits.wdata
+  io.out.wstrb  := io.in.w.bits.wstrb
+  io.out.wlast  := io.in.w.bits.wlast
+
+  // Read Address Channel (AR)
+  io.out.arvalid := io.in.ar.valid
+  io.in.ar.ready := io.out.arready
+  io.out.arid    := io.in.ar.bits.arid
+  io.out.araddr  := io.in.ar.bits.araddr
+  io.out.arlen   := io.in.ar.bits.arlen
+  io.out.arsize  := io.in.ar.bits.arsize
+  io.out.arburst := io.in.ar.bits.arburst
+
+
+  // Slave -> Master Channels (R, B)
+  // 方向: io.out驱动io.in, io.in的ready信号驱动io.out的ready
+
+  // Read Data Channel (R)
+  io.in.r.valid := io.out.rvalid
+  io.out.rready := io.in.r.ready
+  io.in.r.bits.rid   := io.out.rid
+  io.in.r.bits.rdata := io.out.rdata
+  io.in.r.bits.rresp := io.out.rresp
+  io.in.r.bits.rlast := io.out.rlast
+
+  // Write Response Channel (B)
+  io.in.b.valid := io.out.bvalid
+  io.out.bready := io.in.b.ready
+  io.in.b.bits.bid   := io.out.bid
+  io.in.b.bits.bresp := io.out.bresp
+}
+
 object AXIdataview {
   implicit val axiView: DataView[SoCAXI, AXI] = DataView(
     (target: SoCAXI) => new AXI,

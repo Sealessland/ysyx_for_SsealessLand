@@ -1,5 +1,4 @@
-package xininn
-
+package  xininn
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.dataview._
@@ -14,10 +13,11 @@ class ysyx_23060321 extends Module {
 
   // 获取结构化视图
   val master = io.master.viewAs[AXI]
-
   val slave  = io.slave.viewAs[AXI]
-  val carry_pc = RegInit(0.U(32.W))
-  val carry_inst = RegInit(0.U(32.W))
+
+  // 使用 withName 为寄存器命名
+  val carry_pc = RegInit(0.U(32.W)).withName("carry_pc")
+  val carry_inst = RegInit(0.U(32.W)).withName("carry_inst")
 
   // 将未使用的 slave 接口输出赋值为0
   slave.aw.ready := false.B
@@ -31,36 +31,42 @@ class ysyx_23060321 extends Module {
   slave.r.bits.rdata := 0.U
   slave.r.bits.rresp := 0.U
   slave.r.bits.rlast := false.B
-  val ifu  = Module(new Fetch_v5)
-  val idu  = Module(new IDU)
-  val exu  = Module(new EXU)
-  val lsu  = Module(new LSU)
-  val wbu  = Module(new WBU)
-  val xbar = Module(new Xbar)
-  val rf   = Module(new RegFile)
+
+  // 使用正确的 withName 语法为模块实例命名
+  val ifu  = Module(new Fetch_v5).withName("IFU")
+  val idu  = Module(new IDU).withName("IDU")
+  val exu  = Module(new EXU).withName("EXU")
+  val lsu  = Module(new LSU).withName("LSU")
+  val wbu  = Module(new WBU).withName("WBU")
+  val xbar = Module(new Xbar).withName("Xbar")
+  val rf   = Module(new RegFile).withName("RegFile")
+
   ifu.io.axi<>xbar.io.IFin
   lsu.io.axi<>xbar.io.LSin
   xbar.io.out<>master
+
   BusConn(ifu.io.out, idu.io.in)
   BusConn(idu.io.out, exu.io.in)
   BusConn(exu.io.out, lsu.io.in)
   BusConn(lsu.io.out, wbu.io.in)
+
   ifu.io.pcCtrl<>exu.io.pcCtrl
-  val csr = Module(new CSR)
+
+  val csr = Module(new CSR).withName("CSR")
   idu.io.d2r<>rf.io.d2r
-  idu.io.r2e <>  rf.io.r2e
+  idu.io.r2e <> rf.io.r2e
   exu.io.csr<>csr.io
   wbu.io.out<>rf.io.w2r
+
   when(ifu.io.out.fire){
     carry_pc:=ifu.io.out.bits.pc
     carry_inst:=ifu.io.out.bits.inst
   }
+
   when(ifu.io.out.fire){
     InstCounter(enable = lsu.io.out.fire,  inst = carry_inst,clock = clock )
   }
 }
-
-
 
 class core extends Module{
   val io =IO(new Bundle {
@@ -68,28 +74,32 @@ class core extends Module{
     val debugInst = Output(UInt(32.W)) // 用于调试
     val inst_done = Output(Bool())
   })
-  val ifu  = Module(new Fetch_v5)
-  val idu  = Module(new IDU)
-  val exu  = Module(new EXU)
-  val lsu  = Module(new LSU)
-  val wbu  = Module(new WBU)
-  val rf   = Module(new RegFile)
-  val csr = Module(new CSR)
+
+  // 使用正确的 withName 语法为模块实例命名
+  val ifu  = Module(new Fetch_v5).withName("IFU")
+  val idu  = Module(new IDU).withName("IDU")
+  val exu  = Module(new EXU).withName("EXU")
+  val lsu  = Module(new LSU).withName("LSU")
+  val wbu  = Module(new WBU).withName("WBU")
+  val rf   = Module(new RegFile).withName("RegFile")
+  val csr = Module(new CSR).withName("CSR")
 
   io.debugPC:=ifu.io.out.bits.pc
   io.debugInst:=ifu.io.out.bits.inst
+
   BusConn(ifu.io.out, idu.io.in)
   BusConn(idu.io.out, exu.io.in)
   BusConn(exu.io.out, lsu.io.in)
   BusConn(lsu.io.out, wbu.io.in)
+
   idu.io.d2r<>rf.io.d2r
   idu.io.r2e <>  rf.io.r2e
   exu.io.csr<>csr.io
   wbu.io.out<>rf.io.w2r
   ifu.io.pcCtrl<>exu.io.pcCtrl
 
-  val if_sram =Module(new SRAM)
-  val ls_sram =Module(new SRAM)
+  val if_sram = Module(new SRAM).withName("if_sram")
+  val ls_sram = Module(new SRAM).withName("ls_sram")
 
   if_sram.io.ar.valid       := ifu.io.axi.ar.valid
   if_sram.io.ar.bits.addr   := ifu.io.axi.ar.bits.araddr
@@ -118,7 +128,6 @@ class core extends Module{
   if_sram.io.b.ready       :=0.U
   ifu.io.axi.b.valid  := false.B // 表示Slave永远没有写响应
   ifu.io.axi.b.bits   := 0.U.asTypeOf(new AXIbChannel)
-
 
   // =================================================================
   // 连接 LSU (AXI4 Master) 到 ls_sram (AXI4-Lite Slave)
@@ -157,10 +166,9 @@ class core extends Module{
   lsu.io.axi.b.valid        := ls_sram.io.b.valid
   lsu.io.axi.b.bits.bresp   := ls_sram.io.b.bits.resp
   ls_sram.io.b.ready        := lsu.io.axi.b.ready
-  // 提供默认值
-  val LS_reg =RegNext(ls_sram.io.r.valid ||ls_sram.io.w.valid, init = false.B)
+
+  // 使用 withName 为寄存器命名
+  val LS_reg = RegNext(ls_sram.io.r.valid ||ls_sram.io.w.valid, init = false.B).withName("LS_reg")
   io.inst_done:=LS_reg||wbu.io.w2f.inst_done
   lsu.io.axi.b.bits.bid     := 0.U(4.W) // AXI4-Lite 无ID，所以给0
-
-
 }
